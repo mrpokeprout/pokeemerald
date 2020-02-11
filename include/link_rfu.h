@@ -6,6 +6,33 @@
 
 // Exported type declarations
 
+struct UnkLinkRfuStruct_02022B14Substruct
+{
+    u16 unk_00_0:4;
+    u16 unk_00_4:1;
+    u16 unk_00_5:1;
+    u16 unk_00_6:1;
+    u16 isChampion:1;
+    u16 hasNationalDex:1;
+    u16 gameClear:1; // never read, redundant with isChampion
+    u16 unk_01_2:4;  // always 3?
+    u16 unk_01_6:2;
+    u8 playerTrainerId[2];
+};
+
+struct __attribute__((packed, aligned(2))) UnkLinkRfuStruct_02022B14
+{
+    struct UnkLinkRfuStruct_02022B14Substruct unk_00;
+    u8 unk_04[4];
+    u16 species:10;
+    u16 type:6;
+    u8 unk_0a_0:7;
+    u8 unk_0a_7:1;
+    u8 playerGender:1;
+    u8 level:7;
+    u8 unk_0c;
+};
+
 struct UnkLinkRfuStruct_02022B2C
 {
     u8 unk_00;
@@ -128,7 +155,7 @@ struct UnkRfuStruct_Sub_Unused
 
 struct UnkRfuStruct_2
 {
-    /* 0x000 */ void (*unk_00)(void);
+    /* 0x000 */ void (*linkRfuCallback)(void);
     /* 0x004 */ u16 unk_04;
     /* 0x006 */ u8 filler_06[4];
     /* 0x00a */ u16 unk_0a;
@@ -224,11 +251,11 @@ void sub_800F804(void);
 void sub_800F850(void);
 u8 sub_800FCD8(void);
 bool32 sub_800FE84(const u8 *src, size_t size);
-void Rfu_set_zero(void);
+void ClearLinkRfuCallback(void);
 u8 sub_80104F4(void);
 u8 rfu_get_multiplayer_id(void);
 bool8 sub_8010100(u8 a0);
-bool8 sub_8010500(void);
+bool8 IsLinkRfuTaskFinished(void);
 bool8 Rfu_IsMaster(void);
 void task_add_05_task_del_08FA224_when_no_RfuFunc(void);
 void sub_8010434(void);
@@ -275,15 +302,17 @@ void sub_8010FCC(u32 a0, u32 a1, u32 a2);
 void sub_8011C84(void);
 void sub_8012188(const u8 *name, struct UnkLinkRfuStruct_02022B14 *structPtr, u8 a2);
 bool32 sub_8011B90(void);
-void sub_800FE50(u16 *a0);
+void sub_800FE50(void *a0);
 bool32 sub_800E540(u16 id, u8 *name);
 void sub_8011DE0(u32 arg0);
-u8 sub_801100C(int a0);
+u8 sub_801100C(s32 a0);
 void sub_800EF7C(void);
 bool8 sub_800DE7C(struct UnkLinkRfuStruct_02022B14 *buff1, u8 *buff2, u8 idx);
 bool8 sub_800DF34(struct UnkLinkRfuStruct_02022B14 *buff1, u8 *buff2, u8 idx);
 s32 sub_800E87C(u8 idx);
 void sub_8011BA4(void);
+void sub_8010198(void);
+void sub_8011AC8(void);
 void LinkRfu_FatalError(void);
 bool32 sub_8011A9C(void);
 void sub_80104B0(void);

@@ -102,10 +102,10 @@ const u16 gIntroWaterDropAlphaBlend[] =
 static const struct OamData sVersionBannerLeftOamData =
 {
     .y = 160,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 1,
+    .bpp = ST_OAM_8BPP,
     .shape = SPRITE_SHAPE(64x32),
     .x = 0,
     .matrixNum = 0,
@@ -119,10 +119,10 @@ static const struct OamData sVersionBannerLeftOamData =
 static const struct OamData sVersionBannerRightOamData =
 {
     .y = 160,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 1,
+    .bpp = ST_OAM_8BPP,
     .shape = SPRITE_SHAPE(64x32),
     .x = 0,
     .matrixNum = 0,
@@ -190,10 +190,10 @@ static const struct CompressedSpriteSheet sSpriteSheet_EmeraldVersion[] =
 static const struct OamData sOamData_CopyrightBanner =
 {
     .y = 160,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(32x8),
     .x = 0,
     .matrixNum = 0,
@@ -302,10 +302,10 @@ static const struct SpritePalette sSpritePalette_PressStart[] =
 static const struct OamData sPokemonLogoShineOamData =
 {
     .y = 160,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(64x64),
     .x = 0,
     .matrixNum = 0,
@@ -353,7 +353,7 @@ static void SpriteCB_VersionBannerLeft(struct Sprite *sprite)
 {
     if (gTasks[sprite->data[1]].data[1] != 0)
     {
-        sprite->oam.objMode = 0;
+        sprite->oam.objMode = ST_OAM_OBJ_NORMAL;
         sprite->pos1.y = VERSION_BANNER_Y_GOAL;
     }
     else
@@ -370,7 +370,7 @@ static void SpriteCB_VersionBannerRight(struct Sprite *sprite)
 {
     if (gTasks[sprite->data[1]].data[1] != 0)
     {
-        sprite->oam.objMode = 0;
+        sprite->oam.objMode = ST_OAM_OBJ_NORMAL;
         sprite->pos1.y = VERSION_BANNER_Y_GOAL;
     }
     else
@@ -484,22 +484,22 @@ static void StartPokemonLogoShine(u8 flashBg)
     case 0:
     case 2:
         spriteId = CreateSprite(&sPokemonLogoShineSpriteTemplate, 0, 68, 0);
-        gSprites[spriteId].oam.objMode = 2;
+        gSprites[spriteId].oam.objMode = ST_OAM_OBJ_WINDOW;
         gSprites[spriteId].data[0] = flashBg;
         break;
     case 1:
         spriteId = CreateSprite(&sPokemonLogoShineSpriteTemplate, 0, 68, 0);
-        gSprites[spriteId].oam.objMode = 2;
+        gSprites[spriteId].oam.objMode = ST_OAM_OBJ_WINDOW;
         gSprites[spriteId].data[0] = flashBg;
         gSprites[spriteId].invisible = TRUE;
 
         spriteId = CreateSprite(&sPokemonLogoShineSpriteTemplate, 0, 68, 0);
         gSprites[spriteId].callback = SpriteCB_PokemonLogoShine2;
-        gSprites[spriteId].oam.objMode = 2;
+        gSprites[spriteId].oam.objMode = ST_OAM_OBJ_WINDOW;
 
         spriteId = CreateSprite(&sPokemonLogoShineSpriteTemplate, -80, 68, 0);
         gSprites[spriteId].callback = SpriteCB_PokemonLogoShine2;
-        gSprites[spriteId].oam.objMode = 2;
+        gSprites[spriteId].oam.objMode = ST_OAM_OBJ_WINDOW;
         break;
     }
 }
@@ -575,7 +575,7 @@ void CB2_InitTitleScreen(void)
         break;
     }
     case 3:
-        BeginNormalPaletteFade(0xFFFFFFFF, 1, 0x10, 0, 0xFFFF);
+        BeginNormalPaletteFade(0xFFFFFFFF, 1, 0x10, 0, RGB_WHITEALPHA);
         SetVBlankCallback(VBlankCB);
         gMain.state = 4;
         break;
@@ -725,7 +725,7 @@ static void Task_TitleScreenPhase3(u8 taskId)
     if ((gMain.newKeys & A_BUTTON) || (gMain.newKeys & START_BUTTON))
     {
         FadeOutBGM(4);
-        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, 0xFFFF);
+        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, RGB_WHITEALPHA);
         SetMainCallback2(CB2_GoToMainMenu);
     }
     else if ((gMain.heldKeys & CLEAR_SAVE_BUTTON_COMBO) == CLEAR_SAVE_BUTTON_COMBO)
@@ -736,13 +736,13 @@ static void Task_TitleScreenPhase3(u8 taskId)
       && CanResetRTC() == TRUE)
     {
         FadeOutBGM(4);
-        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, 0);
+        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, RGB_BLACK);
         SetMainCallback2(CB2_GoToResetRtcScreen);
     }
     else if ((gMain.heldKeys & BERRY_UPDATE_BUTTON_COMBO) == BERRY_UPDATE_BUTTON_COMBO)
     {
         FadeOutBGM(4);
-        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, 0);
+        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, RGB_BLACK);
         SetMainCallback2(CB2_GoToBerryFixScreen);
     }
     else
@@ -759,7 +759,7 @@ static void Task_TitleScreenPhase3(u8 taskId)
         UpdateLegendaryMarkingColor(gTasks[taskId].tCounter);
         if ((gMPlayInfo_BGM.status & 0xFFFF) == 0)
         {
-            BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, 0xFFFF);
+            BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, RGB_WHITEALPHA);
             SetMainCallback2(CB2_GoToCopyrightScreen);
         }
     }

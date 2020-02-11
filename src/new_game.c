@@ -37,6 +37,7 @@
 #include "contest.h"
 #include "item_menu.h"
 #include "pokemon_storage_system.h"
+#include "pokemon_jump.h"
 #include "decoration_inventory.h"
 #include "secret_base.h"
 #include "player_pc.h"
@@ -44,8 +45,6 @@
 #include "berry_powder.h"
 #include "mevent.h"
 #include "union_room_chat.h"
-
-extern void ResetPokeJumpResults(void);
 
 extern const u8 EventScript_ResetAllMapFlags[];
 
@@ -56,7 +55,7 @@ static void ResetMiniGamesResults(void);
 
 // EWRAM vars
 EWRAM_DATA bool8 gDifferentSaveFile = FALSE;
-EWRAM_DATA bool8 gUnknown_020322D5 = FALSE;
+EWRAM_DATA bool8 gEnableContestDebugging = FALSE;
 
 // const rom data
 static const struct ContestWinner sContestWinnerPicDummy =
@@ -82,7 +81,7 @@ u32 GetTrainerId(u8 *trainerId)
 void CopyTrainerId(u8 *dst, u8 *src)
 {
     s32 i;
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < TRAINER_ID_LENGTH; i++)
         dst[i] = src[i];
 }
 
@@ -123,8 +122,8 @@ static void ClearFrontierRecord(void)
 {
     CpuFill32(0, &gSaveBlock2Ptr->frontier, sizeof(gSaveBlock2Ptr->frontier));
 
-    gSaveBlock2Ptr->frontier.opponentName[0][0] = EOS;
-    gSaveBlock2Ptr->frontier.opponentName[1][0] = EOS;
+    gSaveBlock2Ptr->frontier.opponentNames[0][0] = EOS;
+    gSaveBlock2Ptr->frontier.opponentNames[1][0] = EOS;
 }
 
 static void WarpToTruck(void)
@@ -151,7 +150,7 @@ void ResetMenuAndMonGlobals(void)
 
 void NewGameInitData(void)
 {
-    if (gSaveFileStatus == 0 || gSaveFileStatus == 2)
+    if (gSaveFileStatus == SAVE_STATUS_EMPTY || gSaveFileStatus == SAVE_STATUS_CORRUPT)
         RtcReset();
 
     gDifferentSaveFile = 1;
@@ -199,7 +198,7 @@ void NewGameInitData(void)
     ScriptContext2_RunNewScript(EventScript_ResetAllMapFlags);
     ResetMiniGamesResults();
     copy_strings_to_sav1();
-    SetLilycoveLady();
+    InitLilycoveLady();
     ResetAllApprenticeData();
     ClearRankingHallRecords();
     InitMatchCallCounters();

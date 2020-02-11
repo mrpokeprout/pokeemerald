@@ -27,4 +27,8 @@ Thumbs.db
 build/
 .DS_Store
 *.ddump
+.idea/
 porymap.project.cfg
+.vscode/
+*.a
+.fuse_hidden*

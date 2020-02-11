@@ -17,7 +17,7 @@
 #include "item_menu.h"
 #include "list_menu.h"
 #include "main.h"
-#include "alloc.h"
+#include "malloc.h"
 #include "menu.h"
 #include "menu_helpers.h"
 #include "money.h"
@@ -33,10 +33,12 @@
 #include "strings.h"
 #include "text_window.h"
 #include "tv.h"
+#include "constants/decorations.h"
 #include "constants/items.h"
 #include "constants/metatile_behaviors.h"
 #include "constants/rgb.h"
 #include "constants/songs.h"
+#include "constants/tv.h"
 
 EWRAM_DATA struct MartInfo gMartInfo = {0};
 EWRAM_DATA struct ShopData *gShopDataPtr = NULL;
@@ -86,8 +88,8 @@ static void Task_ReturnToItemListAfterItemPurchase(u8 taskId);
 static void Task_ReturnToItemListAfterDecorationPurchase(u8 taskId);
 static void Task_HandleShopMenuBuy(u8 taskId);
 static void Task_HandleShopMenuSell(u8 taskId);
-static void BuyMenuPrintItemDescriptionAndShowItemIcon(int item, bool8 onInit, struct ListMenu *list);
-static void BuyMenuPrintPriceInList(u8 windowId, int item, u8 y);
+static void BuyMenuPrintItemDescriptionAndShowItemIcon(s32 item, bool8 onInit, struct ListMenu *list);
+static void BuyMenuPrintPriceInList(u8 windowId, s32 item, u8 y);
 
 static const struct YesNoFuncTable sShopPurchaseYesNoFuncs =
 {
@@ -276,7 +278,7 @@ static u8 CreateShopMenu(u8 martType)
     ScriptContext2_Enable();
     gMartInfo.martType = martType;
 
-    if (martType == MART_TYPE_0)
+    if (martType == MART_TYPE_NORMAL)
     {
         struct WindowTemplate winTemplate;
         winTemplate = sShopMenuWindowTemplates[0];
@@ -346,7 +348,7 @@ static void Task_HandleShopMenuBuy(u8 taskId)
     data[8] = (u32)CB2_InitBuyMenu >> 16;
     data[9] = (u32)CB2_InitBuyMenu;
     gTasks[taskId].func = Task_GoToBuyOrSellMenu;
-    FadeScreen(1, 0);
+    FadeScreen(FADE_TO_BLACK, 0);
 }
 
 static void Task_HandleShopMenuSell(u8 taskId)
@@ -355,7 +357,7 @@ static void Task_HandleShopMenuSell(u8 taskId)
     data[8] = (u32)CB2_GoToSellMenu >> 16;
     data[9] = (u32)CB2_GoToSellMenu;
     gTasks[taskId].func = Task_GoToBuyOrSellMenu;
-    FadeScreen(1, 0);
+    FadeScreen(FADE_TO_BLACK, 0);
 }
 
 void CB2_ExitSellMenu(void)
@@ -388,7 +390,7 @@ static void Task_GoToBuyOrSellMenu(u8 taskId)
 
 static void MapPostLoadHook_ReturnToShopMenu(void)
 {
-    pal_fill_black();
+    FadeInFromBlack();
     CreateTask(Task_ReturnToShopMenu, 8);
 }
 
@@ -396,7 +398,7 @@ static void Task_ReturnToShopMenu(u8 taskId)
 {
     if (IsWeatherNotFadingIn() == TRUE)
     {
-        if (gMartInfo.martType == MART_TYPE_2)
+        if (gMartInfo.martType == MART_TYPE_DECOR2)
             DisplayItemMessageOnField(taskId, gText_CanIHelpWithAnythingElse, ShowShopMenuAfterExitingBuyOrSellMenu);
         else
             DisplayItemMessageOnField(taskId, gText_AnythingElseICanHelp, ShowShopMenuAfterExitingBuyOrSellMenu);
@@ -437,7 +439,7 @@ static void CB2_InitBuyMenu(void)
     {
     case 0:
         SetVBlankHBlankCallbacksToNull();
-        CpuFastFill(0, (void *)OAM, 0x400);
+        CpuFastFill(0, (void *)OAM, OAM_SIZE);
         ScanlineEffect_Stop();
         reset_temp_tile_data_buffers();
         FreeAllSpritePalettes();
@@ -511,7 +513,7 @@ static void BuyMenuBuildListMenuTemplate(void)
 
 static void BuyMenuSetListEntry(struct ListMenuItem *menuItem, u16 item, u8 *name)
 {
-    if (gMartInfo.martType == MART_TYPE_0)
+    if (gMartInfo.martType == MART_TYPE_NORMAL)
         CopyItemName(item, name);
     else
         StringCopy(name, gDecorations[item].name);
@@ -520,7 +522,7 @@ static void BuyMenuSetListEntry(struct ListMenuItem *menuItem, u16 item, u8 *nam
     menuItem->id = item;
 }
 
-static void BuyMenuPrintItemDescriptionAndShowItemIcon(int item, bool8 onInit, struct ListMenu *list)
+static void BuyMenuPrintItemDescriptionAndShowItemIcon(s32 item, bool8 onInit, struct ListMenu *list)
 {
     const u8 *description;
     if (onInit != TRUE)
@@ -535,7 +537,7 @@ static void BuyMenuPrintItemDescriptionAndShowItemIcon(int item, bool8 onInit, s
     gShopDataPtr->iconSlot ^= 1;
     if (item != -2)
     {
-        if (gMartInfo.martType == MART_TYPE_0)
+        if (gMartInfo.martType == MART_TYPE_NORMAL)
             description = ItemId_GetDescription(item);
         else
             description = gDecorations[item].description;
@@ -549,17 +551,17 @@ static void BuyMenuPrintItemDescriptionAndShowItemIcon(int item, bool8 onInit, s
     BuyMenuPrint(2, description, 3, 1, 0, 0);
 }
 
-static void BuyMenuPrintPriceInList(u8 windowId, int item, u8 y)
+static void BuyMenuPrintPriceInList(u8 windowId, s32 item, u8 y)
 {
     u8 x;
 
     if (item != -2)
     {
-        if (gMartInfo.martType == MART_TYPE_0)
+        if (gMartInfo.martType == MART_TYPE_NORMAL)
         {
             ConvertIntToDecimalStringN(
                 gStringVar1,
-                ItemId_GetPrice(item) >> GetPriceReduction(1),
+                ItemId_GetPrice(item) >> GetPriceReduction(POKENEWS_SLATEPORT),
                 STR_CONV_MODE_LEFT_ALIGN,
                 5);
         }
@@ -616,7 +618,7 @@ static void BuyMenuAddItemIcon(u16 item, u8 iconSlot)
     if (*spriteIdPtr != 0xFF)
         return;
 
-    if (gMartInfo.martType == MART_TYPE_0 || item == 0xFFFF)
+    if (gMartInfo.martType == MART_TYPE_NORMAL || item == 0xFFFF)
     {
         spriteId = AddItemIconSprite(iconSlot + 2110, iconSlot + 2110, item);
         if (spriteId != MAX_SPRITES)
@@ -854,7 +856,7 @@ static void BuyMenuDrawEventObjects(void)
         if (BuyMenuCheckIfEventObjectOverlapsMenuBg(gShopDataPtr->viewportObjects[i]) == TRUE)
         {
             gSprites[spriteId].subspriteTableNum = 4;
-            gSprites[spriteId].subspriteMode = 1;
+            gSprites[spriteId].subspriteMode = SUBSPRITES_ON;
         }
 
         StartSpriteAnim(&gSprites[spriteId], gShopDataPtr->viewportObjects[i][ANIM_NUM]);
@@ -929,9 +931,9 @@ static void Task_BuyMenu(u8 taskId)
             BuyMenuRemoveScrollIndicatorArrows();
             BuyMenuPrintCursor(tListTaskId, 2);
 
-            if (gMartInfo.martType == MART_TYPE_0)
+            if (gMartInfo.martType == MART_TYPE_NORMAL)
             {
-                gShopDataPtr->totalCost = (ItemId_GetPrice(itemId) >> GetPriceReduction(1));
+                gShopDataPtr->totalCost = (ItemId_GetPrice(itemId) >> GetPriceReduction(POKENEWS_SLATEPORT));
             }
             else
             {
@@ -944,7 +946,7 @@ static void Task_BuyMenu(u8 taskId)
             }
             else
             {
-                if (gMartInfo.martType == MART_TYPE_0)
+                if (gMartInfo.martType == MART_TYPE_NORMAL)
                 {
                     CopyItemName(itemId, gStringVar1);
                     if (ItemId_GetPocket(itemId) == POCKET_TM_HM)
@@ -962,7 +964,7 @@ static void Task_BuyMenu(u8 taskId)
                     StringCopy(gStringVar1, gDecorations[itemId].name);
                     ConvertIntToDecimalStringN(gStringVar2, gShopDataPtr->totalCost, STR_CONV_MODE_LEFT_ALIGN, 6);
 
-                    if (gMartInfo.martType == MART_TYPE_1)
+                    if (gMartInfo.martType == MART_TYPE_DECOR)
                         StringExpandPlaceholders(gStringVar4, gText_Var1IsItThatllBeVar2);
                     else
                         StringExpandPlaceholders(gStringVar4, gText_YouWantedVar1ThatllBeVar2);
@@ -992,9 +994,9 @@ static void Task_BuyHowManyDialogueInit(u8 taskId)
 
     maxQuantity = GetMoney(&gSaveBlock1Ptr->money) / gShopDataPtr->totalCost;
 
-    if (maxQuantity > 99)
+    if (maxQuantity > MAX_BAG_ITEM_CAPACITY)
     {
-        gShopDataPtr->maxQuantity = 99;
+        gShopDataPtr->maxQuantity = MAX_BAG_ITEM_CAPACITY;
     }
     else
     {
@@ -1010,7 +1012,7 @@ static void Task_BuyHowManyDialogueHandleInput(u8 taskId)
 
     if (AdjustQuantityAccordingToDPadInput(&tItemCount, gShopDataPtr->maxQuantity) == TRUE)
     {
-        gShopDataPtr->totalCost = (ItemId_GetPrice(tItemId) >> GetPriceReduction(1)) * tItemCount;
+        gShopDataPtr->totalCost = (ItemId_GetPrice(tItemId) >> GetPriceReduction(POKENEWS_SLATEPORT)) * tItemCount;
         BuyMenuPrintItemQuantityAndPrice(taskId);
     }
     else
@@ -1051,7 +1053,7 @@ static void BuyMenuTryMakePurchase(u8 taskId)
 
     PutWindowTilemap(1);
 
-    if (gMartInfo.martType == MART_TYPE_0)
+    if (gMartInfo.martType == MART_TYPE_NORMAL)
     {
         if (AddBagItem(tItemId, tItemCount) == TRUE)
         {
@@ -1067,7 +1069,7 @@ static void BuyMenuTryMakePurchase(u8 taskId)
     {
         if (DecorationAdd(tItemId))
         {
-            if (gMartInfo.martType == MART_TYPE_1)
+            if (gMartInfo.martType == MART_TYPE_DECOR)
             {
                 BuyMenuDisplayMessage(taskId, gText_ThankYouIllSendItHome, BuyMenuSubtractMoney);
             }
@@ -1090,7 +1092,7 @@ static void BuyMenuSubtractMoney(u8 taskId)
     PlaySE(SE_REGI);
     PrintMoneyAmountInMoneyBox(0, GetMoney(&gSaveBlock1Ptr->money), 0);
 
-    if (gMartInfo.martType == MART_TYPE_0)
+    if (gMartInfo.martType == MART_TYPE_NORMAL)
     {
         gTasks[taskId].func = Task_ReturnToItemListAfterItemPurchase;
     }
@@ -1146,7 +1148,7 @@ static void BuyMenuPrintItemQuantityAndPrice(u8 taskId)
 
     FillWindowPixelBuffer(4, PIXEL_FILL(1));
     PrintMoneyAmount(4, 38, 1, gShopDataPtr->totalCost, TEXT_SPEED_FF);
-    ConvertIntToDecimalStringN(gStringVar1, tItemCount, 2, 2);
+    ConvertIntToDecimalStringN(gStringVar1, tItemCount, STR_CONV_MODE_LEADING_ZEROS, 2);
     StringExpandPlaceholders(gStringVar4, gText_xVar1);
     BuyMenuPrint(4, gStringVar4, 0, 1, 0, 0);
 }
@@ -1154,7 +1156,7 @@ static void BuyMenuPrintItemQuantityAndPrice(u8 taskId)
 static void ExitBuyMenu(u8 taskId)
 {
     gFieldCallback = MapPostLoadHook_ReturnToShopMenu;
-    BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 16, 0);
+    BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 16, RGB_BLACK);
     gTasks[taskId].func = Task_ExitBuyMenu;
 }
 
@@ -1211,7 +1213,7 @@ static void RecordItemPurchase(u8 taskId)
 
 void CreatePokemartMenu(const u16 *itemsForSale)
 {
-    CreateShopMenu(MART_TYPE_0);
+    CreateShopMenu(MART_TYPE_NORMAL);
     SetShopItemsForSale(itemsForSale);
     ClearItemPurchases();
     SetShopMenuCallback(EnableBothScriptContexts);
@@ -1219,14 +1221,14 @@ void CreatePokemartMenu(const u16 *itemsForSale)
 
 void CreateDecorationShop1Menu(const u16 *itemsForSale)
 {
-    CreateShopMenu(MART_TYPE_1);
+    CreateShopMenu(MART_TYPE_DECOR);
     SetShopItemsForSale(itemsForSale);
     SetShopMenuCallback(EnableBothScriptContexts);
 }
 
 void CreateDecorationShop2Menu(const u16 *itemsForSale)
 {
-    CreateShopMenu(MART_TYPE_2);
+    CreateShopMenu(MART_TYPE_DECOR2);
     SetShopItemsForSale(itemsForSale);
     SetShopMenuCallback(EnableBothScriptContexts);
 }

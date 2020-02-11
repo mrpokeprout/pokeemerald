@@ -5,7 +5,7 @@
 #include "graphics.h"
 #include "bg.h"
 #include "main.h"
-#include "alloc.h"
+#include "malloc.h"
 #include "palette.h"
 #include "scanline_effect.h"
 #include "menu.h"
@@ -101,10 +101,10 @@ static const TaskFunc sTasksForAnimations[] =
 static const struct OamData sOamData_862A6BC =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(64x64),
     .x = 0,
     .matrixNum = 0,
@@ -118,10 +118,10 @@ static const struct OamData sOamData_862A6BC =
 static const struct OamData sOamData_862A6C4 =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(32x32),
     .x = 0,
     .matrixNum = 0,
@@ -135,10 +135,10 @@ static const struct OamData sOamData_862A6C4 =
 static const struct OamData sOamData_862A6CC =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(64x32),
     .x = 0,
     .matrixNum = 0,
@@ -152,10 +152,10 @@ static const struct OamData sOamData_862A6CC =
 static const struct OamData sOamData_862A6D4 =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(32x16),
     .x = 0,
     .matrixNum = 0,
@@ -169,10 +169,10 @@ static const struct OamData sOamData_862A6D4 =
 static const struct OamData sOamData_862A6DC =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(16x8),
     .x = 0,
     .matrixNum = 0,
@@ -186,10 +186,10 @@ static const struct OamData sOamData_862A6DC =
 static const struct OamData sOamData_862A6E4 =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(16x32),
     .x = 0,
     .matrixNum = 0,
@@ -203,10 +203,10 @@ static const struct OamData sOamData_862A6E4 =
 static const struct OamData sOamData_862A6EC =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(16x16),
     .x = 0,
     .matrixNum = 0,
@@ -220,10 +220,10 @@ static const struct OamData sOamData_862A6EC =
 static const struct OamData sOamData_862A6F4 =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(32x8),
     .x = 0,
     .matrixNum = 0,
@@ -1563,7 +1563,7 @@ static void Task_DuoFightAnim(u8 taskId)
     }
 
     BlendPalettes(-1, 0x10, 0);
-    BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, 0);
+    BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, RGB_BLACK);
     SetVBlankCallback(VBlankCB_DuoFight);
     PlaySE(SE_T_OOAME);
 }
@@ -1715,7 +1715,7 @@ static void sub_81D752C(u8 taskId)
 static void DuoFightEnd(u8 taskId, s8 palDelay)
 {
     PlaySE(SE_T_OOAME_E);
-    BeginNormalPaletteFade(0xFFFFFFFF, palDelay, 0, 0x10, 0);
+    BeginNormalPaletteFade(0xFFFFFFFF, palDelay, 0, 0x10, RGB_BLACK);
     gTasks[taskId].func = Task_DuoFightEnd;
 }
 
@@ -1971,7 +1971,7 @@ static void Task_HandleRayTakesFlight(u8 taskId)
     case 0:
         if (data[1] == 8)
         {
-            BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, 0);
+            BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, RGB_BLACK);
             data[2] = 0;
             data[3] = 30;
             data[4] = 0;
@@ -2012,7 +2012,7 @@ static void Task_HandleRayTakesFlight(u8 taskId)
             if (data[1] > 295)
             {
                 data[0]++;
-                BeginNormalPaletteFade(0xFFFFFFFF, 6, 0, 0x10, 0);
+                BeginNormalPaletteFade(0xFFFFFFFF, 6, 0, 0x10, RGB_BLACK);
             }
         }
         break;
@@ -2045,8 +2045,8 @@ static void sub_81D81A4(u8 taskId)
                                    (sUnknown_0862AAB8[data[0]][1] * 4) + 80,
                                    0);
         gSprites[spriteId].data[0] = (s8)(data[0]);
-        gSprites[spriteId].oam.objMode = 1;
-        gSprites[spriteId].oam.affineMode = 3;
+        gSprites[spriteId].oam.objMode = ST_OAM_OBJ_BLEND;
+        gSprites[spriteId].oam.affineMode = ST_OAM_AFFINE_DOUBLE;
         gSprites[spriteId].oam.priority = 2;
         InitSpriteAffineAnim(&gSprites[spriteId]);
         if (data[0] == 9)
@@ -2174,7 +2174,7 @@ static void Task_HandleRayDescends(u8 taskId)
     case 0:
         if (data[1] == 8)
         {
-            BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, 0);
+            BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, RGB_BLACK);
             data[1] = 0;
             data[0]++;
         }
@@ -2219,7 +2219,7 @@ static void Task_HandleRayDescends(u8 taskId)
         }
         break;
     case 4:
-        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, 0);
+        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, RGB_BLACK);
         gTasks[taskId].func = Task_RayDescendsEnd;
         break;
     }
@@ -2366,7 +2366,7 @@ static void Task_HandleRayCharges(u8 taskId)
     case 0:
         if (data[1] == 8)
         {
-            BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, 0);
+            BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, RGB_BLACK);
             data[1] = 0;
             data[0]++;
         }
@@ -2399,7 +2399,7 @@ static void Task_HandleRayCharges(u8 taskId)
         }
         break;
     case 3:
-        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, 0);
+        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, RGB_BLACK);
         gTasks[taskId].func = Task_RayChargesEnd;
         break;
     }
@@ -2532,7 +2532,7 @@ static void Task_HandleRayChasesAway(u8 taskId)
         if (data[1] == 8)
         {
             sub_81D90A8(taskId);
-            BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, 0);
+            BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, RGB_BLACK);
             data[1] = 0;
             data[0]++;
         }
@@ -2574,7 +2574,7 @@ static void Task_HandleRayChasesAway(u8 taskId)
         }
         break;
     case 3:
-        BeginNormalPaletteFade(0xFFFFFFFF, 4, 0, 0x10, 0);
+        BeginNormalPaletteFade(0xFFFFFFFF, 4, 0, 0x10, RGB_BLACK);
         gTasks[taskId].func = Task_RayChasesAwayEnd;
         break;
     }

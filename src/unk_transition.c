@@ -8,6 +8,7 @@
 #include "trig.h"
 #include "bg.h"
 #include "gpu_regs.h"
+#include "constants/rgb.h"
 
 typedef bool8 (*TransitionStateFunc)(struct Task *task);
 
@@ -46,10 +47,10 @@ static const u8 sFiller[0x1C0] = {0};
 static const struct OamData sOamData_862B71C =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(64x64),
     .x = 0,
     .matrixNum = 0,
@@ -361,7 +362,7 @@ static bool8 sub_81DAB4C(struct Task *task)
     {
         if (task->data[3] == 31)
         {
-            BeginNormalPaletteFade(0xFFFFFFFF, -1, 0, 0x10, 0);
+            BeginNormalPaletteFade(0xFFFFFFFF, -1, 0, 0x10, RGB_BLACK);
             task->tState++;
         }
         else

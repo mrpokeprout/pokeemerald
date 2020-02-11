@@ -9,7 +9,7 @@
 #include "field_weather.h"
 #include "gpu_regs.h"
 #include "main.h"
-#include "alloc.h"
+#include "malloc.h"
 #include "overworld.h"
 #include "palette.h"
 #include "random.h"
@@ -23,6 +23,7 @@
 #include "constants/field_effects.h"
 #include "constants/songs.h"
 #include "constants/trainers.h"
+#include "constants/rgb.h"
 
 struct TransitionData
 {
@@ -75,7 +76,7 @@ static void Phase2Task_Slice(u8 taskId);
 static void Phase2Task_WhiteFade(u8 taskId);
 static void Phase2Task_GridSquares(u8 taskId);
 static void Phase2Task_Shards(u8 taskId);
-static void Phase2Task_Sydney(u8 taskId);
+static void Phase2Task_Sidney(u8 taskId);
 static void Phase2Task_Phoebe(u8 taskId);
 static void Phase2Task_Glacia(u8 taskId);
 static void Phase2Task_Drake(u8 taskId);
@@ -261,10 +262,10 @@ static bool8 sub_814842C(struct Sprite *sprite);
 static bool8 sub_8148458(struct Sprite *sprite);
 
 // iwram bss vars
-IWRAM_DATA static s16 sUnusedRectangularSpiralVar;
-IWRAM_DATA static u8 sTestingTransitionId;
-IWRAM_DATA static u8 sTestingTransitionState;
-IWRAM_DATA static struct StructRectangularSpiral sRectangularSpiralTransition[4];
+static s16 sUnusedRectangularSpiralVar;
+static u8 sTestingTransitionId;
+static u8 sTestingTransitionState;
+static struct StructRectangularSpiral sRectangularSpiralTransition[4];
 
 // ewram vars
 EWRAM_DATA static struct TransitionData *sTransitionStructPtr = NULL;
@@ -330,7 +331,7 @@ static const TaskFunc sPhase2_Tasks[B_TRANSITION_COUNT] =
     Phase2Task_WhiteFade,                   // 9
     Phase2Task_GridSquares,                 // 10
     Phase2Task_Shards,                      // 11
-    Phase2Task_Sydney,                      // 12
+    Phase2Task_Sidney,                      // 12
     Phase2Task_Phoebe,                      // 13
     Phase2Task_Glacia,                      // 14
     Phase2Task_Drake,                       // 15
@@ -759,10 +760,10 @@ static const struct SpriteTemplate gUnknown_085C8E68 =
 static const struct OamData gOamData_85C8E80 =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(64x64),
     .x = 0,
     .matrixNum = 0,
@@ -823,7 +824,7 @@ const struct SpritePalette gFieldEffectObjectPaletteInfo10 =
     gFieldEffectObjectPalette10, 0x1009
 };
 
-static const u16 sMugshotPal_Sydney[] = INCBIN_U16("graphics/battle_transitions/sidney_bg.gbapal");
+static const u16 sMugshotPal_Sidney[] = INCBIN_U16("graphics/battle_transitions/sidney_bg.gbapal");
 static const u16 sMugshotPal_Phoebe[] = INCBIN_U16("graphics/battle_transitions/phoebe_bg.gbapal");
 static const u16 sMugshotPal_Glacia[] = INCBIN_U16("graphics/battle_transitions/glacia_bg.gbapal");
 static const u16 sMugshotPal_Drake[] = INCBIN_U16("graphics/battle_transitions/drake_bg.gbapal");
@@ -833,7 +834,7 @@ static const u16 sMugshotPal_May[] = INCBIN_U16("graphics/battle_transitions/may
 
 static const u16 *const sOpponentMugshotsPals[MUGSHOTS_COUNT] =
 {
-    sMugshotPal_Sydney,
+    sMugshotPal_Sidney,
     sMugshotPal_Phoebe,
     sMugshotPal_Glacia,
     sMugshotPal_Drake,
@@ -1076,7 +1077,7 @@ static bool8 Phase2_Blur_Func2(struct Task *task)
     {
         task->tData1 = 4;
         if (++task->tData2 == 10)
-            BeginNormalPaletteFade(0xFFFFFFFF, -1, 0, 0x10, 0);
+            BeginNormalPaletteFade(0xFFFFFFFF, -1, 0, 0x10, RGB_BLACK);
         SetGpuReg(REG_OFFSET_MOSAIC, (task->tData2 & 15) * 17);
         if (task->tData2 > 14)
             task->tState++;
@@ -1103,7 +1104,7 @@ static bool8 Phase2_Swirl_Func1(struct Task *task)
 {
     sub_8149F08();
     ScanlineEffect_Clear();
-    BeginNormalPaletteFade(0xFFFFFFFF, 4, 0, 0x10, 0);
+    BeginNormalPaletteFade(0xFFFFFFFF, 4, 0, 0x10, RGB_BLACK);
     sub_8149F98(gScanlineEffectRegBuffers[1], sTransitionStructPtr->field_14, 0, 2, 0, 160);
 
     SetVBlankCallback(VBlankCB_Phase2_Swirl);
@@ -1158,7 +1159,7 @@ static bool8 Phase2_Shuffle_Func1(struct Task *task)
     sub_8149F08();
     ScanlineEffect_Clear();
 
-    BeginNormalPaletteFade(0xFFFFFFFF, 4, 0, 0x10, 0);
+    BeginNormalPaletteFade(0xFFFFFFFF, 4, 0, 0x10, RGB_BLACK);
     memset(gScanlineEffectRegBuffers[1], sTransitionStructPtr->field_16, 0x140);
 
     SetVBlankCallback(VBlankCB_Phase2_Shuffle);
@@ -1461,7 +1462,7 @@ static bool8 Phase2_Kyogre_Func5(struct Task *task)
 
 static bool8 Phase2_WeatherDuo_Func6(struct Task *task)
 {
-    BeginNormalPaletteFade(0xFFFF8000, 1, 0, 0x10, 0);
+    BeginNormalPaletteFade(0xFFFF8000, 1, 0, 0x10, RGB_BLACK);
     task->tState++;
     return FALSE;
 }
@@ -1546,7 +1547,7 @@ static bool8 Phase2_FramesCountdown(struct Task *task)
 
 static bool8 Phase2_WeatherTrio_Func1(struct Task *task)
 {
-    BeginNormalPaletteFade(0x0000FFFF, 1, 0, 0x10, 0);
+    BeginNormalPaletteFade(0x0000FFFF, 1, 0, 0x10, RGB_BLACK);
     task->tState++;
     return FALSE;
 }
@@ -1671,7 +1672,7 @@ bool8 FldEff_Pokeball(void)
 {
     u8 spriteId = CreateSpriteAtEnd(&gUnknown_085C8E68, gFieldEffectArguments[0], gFieldEffectArguments[1], 0);
     gSprites[spriteId].oam.priority = 0;
-    gSprites[spriteId].oam.affineMode = 1;
+    gSprites[spriteId].oam.affineMode = ST_OAM_AFFINE_NORMAL;
     gSprites[spriteId].data[0] = gFieldEffectArguments[2];
     gSprites[spriteId].data[1] = gFieldEffectArguments[3];
     gSprites[spriteId].data[2] = -1;
@@ -1960,16 +1961,17 @@ static bool8 Phase2_Ripple_Func2(struct Task *task)
 
     for (i = 0; i < 160; i++, r4 += r8)
     {
-        // todo: fix the asm
         s16 var = r4 >> 8;
-        asm("");
+        
+        var++;
+        var--;
         gScanlineEffectRegBuffers[0][i] = sTransitionStructPtr->field_16 + Sin(var, r3);
     }
 
     if (++task->tData3 == 81)
     {
         task->tData4++;
-        BeginNormalPaletteFade(0xFFFFFFFF, -2, 0, 0x10, 0);
+        BeginNormalPaletteFade(0xFFFFFFFF, -2, 0, 0x10, RGB_BLACK);
     }
 
     if (task->tData4 != 0 && !gPaletteFade.active)
@@ -2072,9 +2074,9 @@ static void VBlankCB_Phase2_Wave(void)
     DmaSet(0, gScanlineEffectRegBuffers[1], &REG_WIN0H, 0xA2400001);
 }
 
-static void Phase2Task_Sydney(u8 taskId)
+static void Phase2Task_Sidney(u8 taskId)
 {
-    gTasks[taskId].tMugshotId = MUGSHOT_SYDNEY;
+    gTasks[taskId].tMugshotId = MUGSHOT_SIDNEY;
     Phase2Task_MugShotTransition(taskId);
 }
 
@@ -2392,20 +2394,20 @@ static void Mugshots_CreateOpponentPlayerSprites(struct Task *task)
     opponentSprite->callback = sub_8148380;
     playerSprite->callback = sub_8148380;
 
-    opponentSprite->oam.affineMode = 3;
-    playerSprite->oam.affineMode = 3;
+    opponentSprite->oam.affineMode = ST_OAM_AFFINE_DOUBLE;
+    playerSprite->oam.affineMode = ST_OAM_AFFINE_DOUBLE;
 
     opponentSprite->oam.matrixNum = AllocOamMatrix();
     playerSprite->oam.matrixNum = AllocOamMatrix();
 
-    opponentSprite->oam.shape = 1;
-    playerSprite->oam.shape = 1;
+    opponentSprite->oam.shape = SPRITE_SHAPE(64x32);
+    playerSprite->oam.shape = SPRITE_SHAPE(64x32);
 
-    opponentSprite->oam.size = 3;
-    playerSprite->oam.size = 3;
+    opponentSprite->oam.size = SPRITE_SIZE(64x32);
+    playerSprite->oam.size = SPRITE_SIZE(64x32);
 
-    CalcCenterToCornerVec(opponentSprite, 1, 3, 3);
-    CalcCenterToCornerVec(playerSprite, 1, 3, 3);
+    CalcCenterToCornerVec(opponentSprite, SPRITE_SHAPE(64x32), SPRITE_SIZE(64x32), ST_OAM_AFFINE_DOUBLE);
+    CalcCenterToCornerVec(playerSprite, SPRITE_SHAPE(64x32), SPRITE_SIZE(64x32), ST_OAM_AFFINE_DOUBLE);
 
     SetOamMatrixRotationScaling(opponentSprite->oam.matrixNum, sMugshotsOpponentRotationScales[mugshotId][0], sMugshotsOpponentRotationScales[mugshotId][1], 0);
     SetOamMatrixRotationScaling(playerSprite->oam.matrixNum, -512, 512, 0);
@@ -3159,7 +3161,7 @@ static bool8 Phase2_Rayquaza_Func6(struct Task *task)
     {
         task->tState++;
         task->tData1 = 0;
-        BeginNormalPaletteFade(0xFFFF8000, 2, 0, 0x10, 0);
+        BeginNormalPaletteFade(0xFFFF8000, 2, 0, 0x10, RGB_BLACK);
     }
 
     return FALSE;
@@ -3978,7 +3980,7 @@ static bool8 Phase2_30_Func4(struct Task *task)
     if (++task->tData3 == 101)
     {
         task->tData4++;
-        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, 0);
+        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, RGB_BLACK);
     }
 
     if (task->tData4 != 0 && !gPaletteFade.active)

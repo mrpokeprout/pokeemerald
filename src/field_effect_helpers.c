@@ -129,7 +129,7 @@ static void UpdateObjectReflectionSprite(struct Sprite *reflectionSprite)
         reflectionSprite->oam.paletteNum = gReflectionEffectPaletteMap[mainSprite->oam.paletteNum];
         reflectionSprite->oam.shape = mainSprite->oam.shape;
         reflectionSprite->oam.size = mainSprite->oam.size;
-        reflectionSprite->oam.matrixNum = mainSprite->oam.matrixNum | 0x10;
+        reflectionSprite->oam.matrixNum = mainSprite->oam.matrixNum | ST_OAM_VFLIP;
         reflectionSprite->oam.tileNum = mainSprite->oam.tileNum;
         reflectionSprite->subspriteTables = mainSprite->subspriteTables;
         reflectionSprite->subspriteTableNum = mainSprite->subspriteTableNum;
@@ -143,7 +143,7 @@ static void UpdateObjectReflectionSprite(struct Sprite *reflectionSprite)
         reflectionSprite->pos2.y = -mainSprite->pos2.y;
         reflectionSprite->coordOffsetEnabled = mainSprite->coordOffsetEnabled;
 
-        if (eventObject->unk3_3 == TRUE)
+        if (eventObject->hideReflection == TRUE)
             reflectionSprite->invisible = TRUE;
 
         // Check if the reflection is not still.
@@ -153,7 +153,7 @@ static void UpdateObjectReflectionSprite(struct Sprite *reflectionSprite)
             // matrix based on whether or not the main sprite is horizontally flipped.
             // If the sprite is facing to the east, then it is flipped, and its matrixNum is 8.
             reflectionSprite->oam.matrixNum = 0;
-            if (mainSprite->oam.matrixNum & 0x8)
+            if (mainSprite->oam.matrixNum & ST_OAM_HFLIP)
                 reflectionSprite->oam.matrixNum = 1;
         }
     }
@@ -868,13 +868,13 @@ u32 FldEff_Unknown22(void)
     return 0;
 }
 
-void StartAshFieldEffect(s16 x, s16 y, u16 c, s16 d)
+void StartAshFieldEffect(s16 x, s16 y, u16 metatileId, s16 d)
 {
     gFieldEffectArguments[0] = x;
     gFieldEffectArguments[1] = y;
     gFieldEffectArguments[2] = 0x52;
     gFieldEffectArguments[3] = 1;
-    gFieldEffectArguments[4] = c;
+    gFieldEffectArguments[4] = metatileId;
     gFieldEffectArguments[5] = d;
     FieldEffectStart(FLDEFF_ASH);
 }

@@ -1,9 +1,9 @@
 	.include "src/decompress.o"
 	.include "src/main.o"
-	.include "src/window.o"
-	.include "src/text.o"
-	.include "src/sprite.o"
-	.include "src/string_util.o"
+	.include "gflib/window.o"
+	.include "gflib/text.o"
+	.include "gflib/sprite.o"
+	.include "gflib/string_util.o"
 	.include "src/link.o"
 	.include "src/link_rfu.o"
 	.include "src/union_room.o"
@@ -17,37 +17,8 @@
 	.include "src/union_room_chat.o"
 	.include "src/berry_crush.o"
 	.include "src/berry_powder.o"
-
-	.align 2
-	@ dodrio_berry_picking
-gUnknown_02022C98: @ 2022C98
-	.space 0x4
-
-gUnknown_02022C9C: @ 2022C9C
-	.space 0x14
-
-gUnknown_02022CB0: @ 2022CB0
-	.space 0x8
-
-gUnknown_02022CB8: @ 2022CB8
-	.space 0x2C
-
-gUnknown_02022CE4: @ 2022CE4
-	.space 0x10
-
-gUnknown_02022CF4: @ 2022CF4
-	.space 0x4
-
-gUnknown_02022CF8: @ 2022CF8
-	.space 0x4
-
-    @ pokemon_jump
-gUnknown_02022CFC: @ 2022CFC
-	.space 0x4
-
-gUnknown_02022D00: @ 2022D00
-	.space 0x4
-
+	.include "src/dodrio_berry_picking.o"
+	.include "src/pokemon_jump.o"
 	.include "src/main_menu.o"
 	.include "src/battle_controllers.o"
 	.include "src/rom_8034C54.o"
@@ -158,7 +129,7 @@ gUnknown_02022D00: @ 2022D00
 	.include "src/match_call.o"
 	.include "src/menu.o"
 	.include "src/battle_factory_screen.o"
-	.include "src/mossdeep_gym.o"
+	.include "src/rotating_tile_puzzle.o"
 	.include "src/item_menu.o"
 	.include "src/list_menu.o"
 	.include "src/dynamic_placeholder_text_util.o"
@@ -168,17 +139,8 @@ gUnknown_02022D00: @ 2022D00
 	.include "src/pokemon_summary_screen.o"
 	.include "src/unk_pokedex_area_screen_helper.o"
 	.include "src/battle_pyramid_bag.o"
-
-    @ pokenav
-gUnknown_0203CF3C: @ 203CF3C
-	.space 0x4
-
-gUnknown_0203CF40: @ 203CF40
-	.space 0x4
-
-gUnknown_0203CF44: @ 203CF44
-	.space 0x4
-
+	.include "src/pokenav.o"
+	.include "src/pokenav_match_call_ui.o"
 	.include "src/menu_specialized.o"
 	.include "src/faraway_island.o"
 	.include "src/trainer_hill.o"

@@ -1,9 +1,6 @@
 #ifndef GUARD_FIELD_EVENT_OBJ_H
 #define GUARD_FIELD_EVENT_OBJ_H
 
-#define NUM_OBJECT_GRAPHICS_INFO 239
-#define SPRITE_VAR 240
-
 enum SpinnerRunnerFollowPatterns
 {
     RUNFOLLOW_ANY,
@@ -63,6 +60,10 @@ extern const struct OamData gEventObjectBaseOam_32x8;
 extern const struct OamData gEventObjectBaseOam_32x32;
 extern const struct SpriteTemplate *const gFieldEffectObjectTemplatePointers[];
 extern const u8 gReflectionEffectPaletteMap[];
+
+extern const u8 *const gBerryTreeEventObjectGraphicsIdTablePointers[];
+extern const struct SpriteFrameImage *const gBerryTreePicTablePointers[];
+extern const u8 *const gBerryTreePaletteSlotTablePointers[];
 
 void ResetEventObjects(void);
 u8 GetMoveDirectionAnimNum(u8);

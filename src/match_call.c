@@ -1,5 +1,5 @@
 #include "global.h"
-#include "alloc.h"
+#include "malloc.h"
 #include "battle.h"
 #include "battle_setup.h"
 #include "bg.h"
@@ -8,6 +8,7 @@
 #include "event_object_movement.h"
 #include "field_player_avatar.h"
 #include "main.h"
+#include "match_call.h"
 #include "menu.h"
 #include "new_game.h"
 #include "overworld.h"
@@ -74,7 +75,6 @@ struct BattleFrontierStreakInfo
 EWRAM_DATA struct MatchCallState gMatchCallState = {0};
 EWRAM_DATA struct BattleFrontierStreakInfo gBattleFrontierStreakInfo = {0};
 
-bool32 SelectMatchCallMessage(int, u8 *);
 static u32 GetCurrentTotalMinutes(struct Time *);
 static u32 GetNumRegisteredNPCs(void);
 static u32 GetActiveMatchCallTrainerId(u32);
@@ -965,9 +965,9 @@ static const struct MatchCallText *const sMatchCallGeneralTopics[] =
     sMatchCallBattlePyramidTexts,
 };
 
-extern const u8 gUnknown_082A5C9C[];
-extern const u8 gUnknown_082A5D2C[];
-extern const u8 gUnknown_082A633D[];
+extern const u8 gBirchDexRatingText_AreYouCurious[];
+extern const u8 gBirchDexRatingText_SoYouveSeenAndCaught[];
+extern const u8 gBirchDexRatingText_OnANationwideBasis[];
 
 void InitMatchCallCounters(void)
 {
@@ -1060,7 +1060,7 @@ static bool32 SelectMatchCallTrainer(void)
 static u32 GetNumRegisteredNPCs(void)
 {
     u32 i, count;
-    for (i = 0, count = 0; i < 64; i++)
+    for (i = 0, count = 0; i < REMATCH_SPECIAL_TRAINER_START; i++)
     {
         if (FlagGet(FLAG_MATCH_CALL_REGISTERED + i))
             count++;
@@ -1072,7 +1072,7 @@ static u32 GetNumRegisteredNPCs(void)
 static u32 GetActiveMatchCallTrainerId(u32 activeMatchCallId)
 {
     u32 i;
-    for (i = 0; i < 64; i++)
+    for (i = 0; i < REMATCH_SPECIAL_TRAINER_START; i++)
     {
         if (FlagGet(FLAG_MATCH_CALL_REGISTERED + i))
         {
@@ -1098,13 +1098,13 @@ bool32 TryStartMatchCall(void)
     return FALSE;
 }
 
-void StartMatchCallFromScript(void)
+void StartMatchCallFromScript(u8 *message)
 {
     gMatchCallState.triggeredFromScript = 1;
     StartMatchCall();
 }
 
-bool8 IsMatchCallTaskActive(void)
+bool32 IsMatchCallTaskActive(void)
 {
     return FuncIsActiveTask(ExecuteMatchCall);
 }
@@ -1287,10 +1287,10 @@ static bool32 sub_81963F0(u8 taskId)
         ChangeBgY(0, 0, 0);
         if (!gMatchCallState.triggeredFromScript)
         {
-            sub_81973A4();
+            LoadMessageBoxAndBorderGfx();
             playerObjectId = GetEventObjectIdByLocalIdAndMap(EVENT_OBJ_ID_PLAYER, 0, 0);
             EventObjectClearHeldMovementIfFinished(&gEventObjects[playerObjectId]);
-            sub_80D338C();
+            ScriptMovement_UnfreezeEventObjects();
             UnfreezeEventObjects();
             ScriptContext2_Disable();
         }
@@ -1384,7 +1384,7 @@ static u16 GetRematchTrainerLocation(int matchCallId)
 static u32 GetNumRematchTrainersFought(void)
 {
     u32 i, count;
-    for (i = 0, count = 0; i < 64; i++)
+    for (i = 0, count = 0; i < REMATCH_SPECIAL_TRAINER_START; i++)
     {
         if (HasTrainerBeenFought(gRematchTable[i].trainerIds[0]))
             count++;
@@ -1743,10 +1743,10 @@ static void PopulateBattleFrontierStreak(int matchCallId, u8 *destStr)
         i++;
     }
     
-    ConvertIntToDecimalStringN(destStr, gBattleFrontierStreakInfo.streak, 0, i);
+    ConvertIntToDecimalStringN(destStr, gBattleFrontierStreakInfo.streak, STR_CONV_MODE_LEFT_ALIGN, i);
 }
 
-static const u16 sBadgeFlags[] =
+static const u16 sBadgeFlags[NUM_BADGES] =
 {
     FLAG_BADGE01_GET,
     FLAG_BADGE02_GET,
@@ -1762,7 +1762,7 @@ static int GetNumOwnedBadges(void)
 {
     u32 i;
 
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < NUM_BADGES; i++)
     {
         if (!FlagGet(sBadgeFlags[i]))
             break;
@@ -1961,7 +1961,7 @@ static const u8 *const sBirchDexRatingTexts[] =
     gBirchDexRatingText_DexCompleted,
 };
 
-void sub_8197080(u8 *destStr)
+void BufferPokedexRatingForMatchCall(u8 *destStr)
 {
     int numSeen, numCaught;
     u8 *str;
@@ -1976,13 +1976,13 @@ void sub_8197080(u8 *destStr)
 
     numSeen = GetHoennPokedexCount(FLAG_GET_SEEN);
     numCaught = GetHoennPokedexCount(FLAG_GET_CAUGHT);
-    ConvertIntToDecimalStringN(gStringVar1, numSeen, 0, 3);
-    ConvertIntToDecimalStringN(gStringVar2, numCaught, 0, 3);
+    ConvertIntToDecimalStringN(gStringVar1, numSeen, STR_CONV_MODE_LEFT_ALIGN, 3);
+    ConvertIntToDecimalStringN(gStringVar2, numCaught, STR_CONV_MODE_LEFT_ALIGN, 3);
     dexRatingLevel = GetPokedexRatingLevel(numCaught);
-    str = StringCopy(buffer, gUnknown_082A5C9C);
+    str = StringCopy(buffer, gBirchDexRatingText_AreYouCurious);
     str[0] = CHAR_PROMPT_CLEAR;
     str++;
-    str = StringCopy(str, gUnknown_082A5D2C);
+    str = StringCopy(str, gBirchDexRatingText_SoYouveSeenAndCaught);
     str[0] = CHAR_PROMPT_CLEAR;
     str++;
     StringCopy(str, sBirchDexRatingTexts[dexRatingLevel]);
@@ -1994,15 +1994,15 @@ void sub_8197080(u8 *destStr)
         str++;
         numSeen = GetNationalPokedexCount(FLAG_GET_SEEN);
         numCaught = GetNationalPokedexCount(FLAG_GET_CAUGHT);
-        ConvertIntToDecimalStringN(gStringVar1, numSeen, 0, 3);
-        ConvertIntToDecimalStringN(gStringVar2, numCaught, 0, 3);
-        StringExpandPlaceholders(str, gUnknown_082A633D);
+        ConvertIntToDecimalStringN(gStringVar1, numSeen, STR_CONV_MODE_LEFT_ALIGN, 3);
+        ConvertIntToDecimalStringN(gStringVar2, numCaught, STR_CONV_MODE_LEFT_ALIGN, 3);
+        StringExpandPlaceholders(str, gBirchDexRatingText_OnANationwideBasis);
     }
 
     Free(buffer);
 }
 
-void sub_8197184(u8 windowId, u32 destOffset, u32 paletteId)
+void sub_8197184(u32 windowId, u32 destOffset, u32 paletteId)
 {
     u8 bg = GetWindowAttribute(windowId, WINDOW_BG);
     LoadBgTiles(bg, sUnknown_0860EA6C, 0x100, destOffset);

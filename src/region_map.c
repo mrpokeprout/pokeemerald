@@ -2,7 +2,7 @@
 #include "main.h"
 #include "text.h"
 #include "menu.h"
-#include "alloc.h"
+#include "malloc.h"
 #include "gpu_regs.h"
 #include "palette.h"
 #include "party_menu.h"
@@ -24,8 +24,10 @@
 #include "region_map.h"
 #include "constants/region_map_sections.h"
 #include "heal_location.h"
+#include "constants/field_specials.h"
 #include "constants/heal_locations.h"
 #include "constants/map_types.h"
+#include "constants/rgb.h"
 
 #define MAP_WIDTH 28
 #define MAP_HEIGHT 15
@@ -53,7 +55,7 @@ static EWRAM_DATA struct {
     /*0x008*/ struct RegionMap regionMap;
     /*0x88c*/ u8 unk_88c[0x1c0];
     /*0xa4c*/ u8 unk_a4c[0x26];
-    /*0xa72*/ bool8 unk_a72;
+    /*0xa72*/ bool8 choseFlyLocation;
 } *sFlyMap = NULL; // a74
 
 static bool32 gUnknown_03001180;
@@ -492,7 +494,7 @@ void InitRegionMap(struct RegionMap *regionMap, bool8 zoomed)
     while (sub_8122DB0());
 }
 
-void sub_8122CF8(struct RegionMap *regionMap, struct BgTemplate *template, bool8 zoomed)
+void sub_8122CF8(struct RegionMap *regionMap, const struct BgTemplate *template, bool8 zoomed)
 {
     gRegionMap = regionMap;
     gRegionMap->initStep = 0;
@@ -995,7 +997,7 @@ static void RegionMap_InitializeStateBasedOnPlayerLocation(void)
             break;
         case MAP_TYPE_UNDERGROUND:
         case MAP_TYPE_UNUSED_2:
-            if (gMapHeader.flags & 0x02)
+            if (gMapHeader.flags & MAP_ALLOW_ESCAPE_ROPE)
             {
                 mapHeader = Overworld_GetMapHeaderByGroupAndId(gSaveBlock1Ptr->escapeWarp.mapGroup, gSaveBlock1Ptr->escapeWarp.mapNum);
                 gRegionMap->mapSecId = mapHeader->regionMapSectionId;
@@ -1143,20 +1145,20 @@ static void RegionMap_InitializeStateBasedOnSSTidalLocation(void)
     x = 0;
     switch (GetSSTidalLocation(&mapGroup, &mapNum, &xOnMap, &yOnMap))
     {
-        case 1:
+        case SS_TIDAL_LOCATION_SLATEPORT:
             gRegionMap->mapSecId = MAPSEC_SLATEPORT_CITY;
             break;
-        case 2:
+        case SS_TIDAL_LOCATION_LILYCOVE:
             gRegionMap->mapSecId = MAPSEC_LILYCOVE_CITY;
             break;
-        case 3:
+        case SS_TIDAL_LOCATION_ROUTE124:
             gRegionMap->mapSecId = MAPSEC_ROUTE_124;
             break;
-        case 4:
+        case SS_TIDAL_LOCATION_ROUTE131:
             gRegionMap->mapSecId = MAPSEC_ROUTE_131;
             break;
         default:
-        case 0:
+        case SS_TIDAL_LOCATION_CURRENTS:
             mapHeader = Overworld_GetMapHeaderByGroupAndId(mapGroup, mapNum);
 
             gRegionMap->mapSecId = mapHeader->regionMapSectionId;
@@ -1257,7 +1259,7 @@ static u16 RegionMap_GetTerraCaveMapSecId(void)
 {
     s16 idx;
 
-    idx = VarGet(VAR_UNUSUAL_WEATHER_LOCATION) - 1;
+    idx = VarGet(VAR_ABNORMAL_WEATHER_LOCATION) - 1;
     if (idx < 0 || idx > 15)
     {
         idx = 0;
@@ -1269,7 +1271,7 @@ static void RegionMap_GetMarineCaveCoords(u16 *x, u16 *y)
 {
     u16 idx;
 
-    idx = VarGet(VAR_UNUSUAL_WEATHER_LOCATION);
+    idx = VarGet(VAR_ABNORMAL_WEATHER_LOCATION);
     if (idx < 9 || idx > 16)
     {
         idx = 9;
@@ -1414,14 +1416,14 @@ void CreateRegionMapCursor(u16 tileTag, u16 paletteTag)
         gRegionMap->cursorSprite = &gSprites[spriteId];
         if (gRegionMap->zoomed == TRUE)
         {
-            gRegionMap->cursorSprite->oam.size = 2;
+            gRegionMap->cursorSprite->oam.size = SPRITE_SIZE(32x32);
             gRegionMap->cursorSprite->pos1.x -= 8;
             gRegionMap->cursorSprite->pos1.y -= 8;
             StartSpriteAnim(gRegionMap->cursorSprite, 1);
         }
         else
         {
-            gRegionMap->cursorSprite->oam.size = 1;
+            gRegionMap->cursorSprite->oam.size = SPRITE_SIZE(16x16);
             gRegionMap->cursorSprite->pos1.x = 8 * gRegionMap->cursorPosX + 4;
             gRegionMap->cursorSprite->pos1.y = 8 * gRegionMap->cursorPosY + 4;
         }
@@ -1603,7 +1605,8 @@ u8 *GetMapName(u8 *dest, u16 regionMapId, u16 padLength)
     return str;
 }
 
-u8 *sub_81245DC(u8 *dest, u16 mapSecId)
+// TODO: probably needs a better name
+u8 *GetMapNameGeneric(u8 *dest, u16 mapSecId)
 {
     switch (mapSecId)
     {
@@ -1624,7 +1627,7 @@ u8 *sub_8124610(u8 *dest, u16 mapSecId)
     }
     else
     {
-        return sub_81245DC(dest, mapSecId);
+        return GetMapNameGeneric(dest, mapSecId);
     }
 }
 
@@ -1860,15 +1863,15 @@ static void sub_8124AD4(void)
         y = (y + MAPCURSOR_Y_MIN) * 8 + 4;
         if (width == 2)
         {
-            shape = ST_OAM_H_RECTANGLE;
+            shape = SPRITE_SHAPE(16x8);
         }
         else if (height == 2)
         {
-            shape = ST_OAM_V_RECTANGLE;
+            shape = SPRITE_SHAPE(8x16);
         }
         else
         {
-            shape = ST_OAM_SQUARE;
+            shape = SPRITE_SHAPE(8x8);
         }
         spriteId = CreateSprite(&gUnknown_085A1F7C, x, y, 10);
         if (spriteId != MAX_SPRITES)
@@ -1910,7 +1913,7 @@ static void sub_8124BE4(void)
             spriteId = CreateSprite(&gUnknown_085A1F7C, x, y, 10);
             if (spriteId != MAX_SPRITES)
             {
-                gSprites[spriteId].oam.size = 1;
+                gSprites[spriteId].oam.size = SPRITE_SIZE(16x16);
                 gSprites[spriteId].callback = sub_8124CBC;
                 StartSpriteAnim(&gSprites[spriteId], 6);
                 gSprites[spriteId].data[0] = mapSecId;
@@ -1941,7 +1944,7 @@ static void sub_8124D14(void)
     switch (sFlyMap->unk_004)
     {
         case 0:
-            BeginNormalPaletteFade(0xFFFFFFFF, 0, 16, 0, 0);
+            BeginNormalPaletteFade(0xFFFFFFFF, 0, 16, 0, RGB_BLACK);
             sFlyMap->unk_004++;
             break;
         case 1:
@@ -1970,13 +1973,13 @@ static void sub_8124D64(void)
                 if (sFlyMap->regionMap.iconDrawType == MAPSECTYPE_CITY_CANFLY || sFlyMap->regionMap.iconDrawType == MAPSECTYPE_BATTLE_FRONTIER)
                 {
                     m4aSongNumStart(SE_SELECT);
-                    sFlyMap->unk_a72 = TRUE;
+                    sFlyMap->choseFlyLocation = TRUE;
                     sub_81248F4(sub_8124E0C);
                 }
                 break;
             case INPUT_EVENT_B_BUTTON:
                 m4aSongNumStart(SE_SELECT);
-                sFlyMap->unk_a72 = FALSE;
+                sFlyMap->choseFlyLocation = FALSE;
                 sub_81248F4(sub_8124E0C);
                 break;
         }
@@ -1988,14 +1991,14 @@ static void sub_8124E0C(void)
     switch (sFlyMap->unk_004)
     {
         case 0:
-            BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 16, 0);
+            BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 16, RGB_BLACK);
             sFlyMap->unk_004++;
             break;
         case 1:
             if (!UpdatePaletteFade())
             {
                 FreeRegionMapIconResources();
-                if (sFlyMap->unk_a72)
+                if (sFlyMap->choseFlyLocation)
                 {
                     switch (sFlyMap->regionMap.mapSecId)
                     {
@@ -2022,11 +2025,11 @@ static void sub_8124E0C(void)
                             }
                             break;
                     }
-                    sub_80B69DC();
+                    ReturnToFieldFromFlyMapSelect();
                 }
                 else
                 {
-                    SetMainCallback2(sub_81B58A8);
+                    SetMainCallback2(CB2_ReturnToPartyMenuFromFlyMap);
                 }
                 if (sFlyMap != NULL)
                 {

@@ -1,5 +1,5 @@
 #include "global.h"
-#include "alloc.h"
+#include "malloc.h"
 #include "bg.h"
 #include "coins.h"
 #include "decompress.h"
@@ -188,18 +188,18 @@ static void sub_8144A24(struct Sprite *);
 static void sub_8144E60(struct Sprite *);
 static void sub_8145294(struct Sprite *);
 
-extern const u8 gUnknown_082A5B89[];
-extern const u8 gUnknown_082A5C13[];
-extern const u8 gUnknown_082A5BD7[];
-extern const u8 gUnknown_082A5BCB[];
-extern const u8 gUnknown_082A5BE0[];
-extern const u8 gUnknown_082A5BEF[];
-extern const u8 gUnknown_082A5C21[];
-extern const u8 gUnknown_082A5C61[];
-extern const u8 gUnknown_082A5C04[];
-extern const u8 gUnknown_082A5B12[];
-extern const u8 gUnknown_082A5B6B[];
-extern const u8 gUnknown_082A5B4E[];
+extern const u8 Roulette_Text_ControlsInstruction[];
+extern const u8 Roulette_Text_KeepPlaying[];
+extern const u8 Roulette_Text_Jackpot[];
+extern const u8 Roulette_Text_ItsAHit[];
+extern const u8 Roulette_Text_NothingDoing[];
+extern const u8 Roulette_Text_YouveWonXCoins[];
+extern const u8 Roulette_Text_BoardWillBeCleared[];
+extern const u8 Roulette_Text_CoinCaseIsFull[];
+extern const u8 Roulette_Text_NoCoinsLeft[];
+extern const u8 Roulette_Text_PlayMinimumWagerIsX[];
+extern const u8 Roulette_Text_SpecialRateTable[];
+extern const u8 Roulette_Text_NotEnoughCoins[];
 
 static const u16 gUnknown_085B5BFC[] = INCBIN_U16("graphics/roulette/85B5BFC.gbapal");
 static const u32 gUnknown_085B5DFC[] = INCBIN_U32("graphics/roulette/85B5DFC.bin.lz");
@@ -902,7 +902,7 @@ static void sub_8140470(void)
     {
         sub_815168C(&gUnknown_0203AB88->varB8, i, &gUnknown_085B6388[i]);
     }
-    
+
     for (i = 0; i < PARTY_SIZE; i++)
     {
         switch (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES2))
@@ -953,7 +953,7 @@ static void sub_81405CC(void)
     case 4:
         if (free_temp_tile_data_buffers_if_possible())
             return;
-        
+
         sub_8140470();
         CopyToBgTilemapBuffer(2, gUnknown_085B5FA0, 0, 0);
         break;
@@ -974,7 +974,7 @@ static void sub_81405CC(void)
         sub_81436D0(0);
         sub_81424FC(0);
         DrawStdWindowFrame(gUnknown_0203AB8C, FALSE);
-        AddTextPrinterParameterized(gUnknown_0203AB8C, 1, gUnknown_082A5B89, 0, 1, TEXT_SPEED_FF, NULL);
+        AddTextPrinterParameterized(gUnknown_0203AB8C, 1, Roulette_Text_ControlsInstruction, 0, 1, TEXT_SPEED_FF, NULL);
         CopyWindowToVram(gUnknown_0203AB8C, 3);
         gSpriteCoordOffsetX = -60;
         gSpriteCoordOffsetY = 0;
@@ -1045,7 +1045,7 @@ static void sub_8140914(u8 taskId)
 {
     DisplayYesNoMenuDefaultYes();
     DrawStdWindowFrame(gUnknown_0203AB8C, 0);
-    AddTextPrinterParameterized(gUnknown_0203AB8C, 1, gUnknown_082A5C13, 0, 1, TEXT_SPEED_FF, 0);
+    AddTextPrinterParameterized(gUnknown_0203AB8C, 1, Roulette_Text_KeepPlaying, 0, 1, TEXT_SPEED_FF, 0);
     CopyWindowToVram(gUnknown_0203AB8C, 3);
     DoYesNoFuncWithChoice(taskId, &gUnknown_085B6410);
 }
@@ -1213,7 +1213,7 @@ static void sub_8140D6C(u8 r0)
 
 static void sub_8140F6C(u8 r0)
 {
-    sub_80EECA4();
+    IncrementDailyRouletteUses();
     gUnknown_0203AB88->var28 = 0xFF;
     if (gUnknown_0203AB88->var19 == 1)
         gUnknown_0203AB88->var23 = 1;
@@ -1379,8 +1379,6 @@ static u8 sub_814118C(u16 r0, u16 r1)
     }
 }
 
-// r7/r8 swap
-#ifdef NONMATCHING
 static void sub_8141344(u8 taskId)
 {
     u8 randf;
@@ -1412,8 +1410,7 @@ static void sub_8141344(u8 taskId)
 
     g = S16TOPOSFLOAT(g) / 5.0f;
     gUnknown_0203AB88->var82 = g * 3;
-    gUnknown_0203AB88->var84 = g;
-    gUnknown_0203AB88->var86 = g;
+    gUnknown_0203AB88->var86 = gUnknown_0203AB88->var84 = g;
 
     gUnknown_0203AB88->var88 = S16TOPOSFLOAT(angles[(rand & 1) + r5]);
     gUnknown_0203AB88->var8C = S16TOPOSFLOAT(gUnknown_085B6348[gUnknown_0203AB88->var04_0].var18);
@@ -1424,260 +1421,6 @@ static void sub_8141344(u8 taskId)
     gUnknown_0203AB88->varA0 = 36.0f;
     gTasks[taskId].func = sub_814155C;
 }
-#else
-static const u16 gUnknown_085B6422[4] = {0, 180, 90, 270};
-NAKED
-static void sub_8141344(u8 taskId)
-{
-    asm_unified("	push {r4-r7,lr}\n\
-	mov r7, r10\n\
-	mov r6, r9\n\
-	mov r5, r8\n\
-	push {r5-r7}\n\
-	sub sp, 0x8\n\
-	lsls r0, 24\n\
-	lsrs r0, 24\n\
-	mov r10, r0\n\
-	movs r4, 0\n\
-	ldr r1, =gUnknown_085B6422\n\
-	mov r0, sp\n\
-	movs r2, 0x8\n\
-	bl memcpy\n\
-	bl Random\n\
-	lsls r0, 16\n\
-	lsrs r7, r0, 16\n\
-	adds r0, r7, 0\n\
-	movs r1, 0x64\n\
-	bl __umodsi3\n\
-	lsls r0, 16\n\
-	lsrs r6, r0, 16\n\
-	ldr r3, =gUnknown_0203AB88\n\
-	ldr r0, [r3]\n\
-	ldr r2, =gTasks\n\
-	mov r5, r10\n\
-	lsls r1, r5, 2\n\
-	add r1, r10\n\
-	lsls r1, 3\n\
-	adds r1, r2\n\
-	ldrh r2, [r1, 0x14]\n\
-	adds r0, 0x7C\n\
-	strb r2, [r0]\n\
-	ldr r0, [r3]\n\
-	adds r2, r0, 0\n\
-	adds r2, 0x7F\n\
-	strb r4, [r2]\n\
-	subs r2, 0x1\n\
-	strb r4, [r2]\n\
-	adds r0, 0x7D\n\
-	strb r4, [r0]\n\
-	ldrh r0, [r1, 0x18]\n\
-	adds r1, r7, 0\n\
-	bl sub_814118C\n\
-	adds r4, r0, 0\n\
-	lsls r4, 24\n\
-	lsrs r1, r4, 24\n\
-	adds r0, r7, 0\n\
-	bl __modsi3\n\
-	lsrs r4, 25\n\
-	subs r0, r4\n\
-	lsls r0, 24\n\
-	lsrs r4, r0, 24\n\
-	ldr r0, =gLocalTime\n\
-	ldrb r0, [r0, 0x2]\n\
-	lsls r0, 24\n\
-	asrs r0, 24\n\
-	movs r5, 0x1\n\
-	cmp r0, 0xC\n\
-	bgt _081413C8\n\
-	movs r5, 0\n\
-_081413C8:\n\
-	cmp r6, 0x4F\n\
-	bhi _081413E0\n\
-	lsls r0, r5, 25\n\
-	b _081413EA\n\
-	.pool\n\
-_081413E0:\n\
-	lsls r1, r5, 24\n\
-	asrs r1, 24\n\
-	movs r0, 0x1\n\
-	subs r0, r1\n\
-	lsls r0, 25\n\
-_081413EA:\n\
-	lsrs r5, r0, 24\n\
-	ldr r0, _08141530  @ =gUnknown_0203AB88\n\
-	ldr r6, [r0]\n\
-	ldrb r0, [r6, 0x4]\n\
-	lsls r0, 30\n\
-	lsrs r0, 25\n\
-	ldr r1, _08141534  @ =gUnknown_085B6348\n\
-	adds r0, r1\n\
-	lsls r4, 24\n\
-	asrs r4, 24\n\
-	ldrh r0, [r0, 0x1A]\n\
-	adds r4, r0\n\
-	adds r0, r6, 0\n\
-	adds r0, 0x80\n\
-	strh r4, [r0]\n\
-	lsls r4, 16\n\
-	asrs r4, 16\n\
-	adds r0, r4, 0\n\
-	bl __floatsisf\n\
-	cmp r4, 0\n\
-	bge _0814141C\n\
-	ldr r1, _08141538  @ =0x47800000\n\
-	bl __addsf3\n\
-_0814141C:\n\
-	ldr r1, _0814153C  @ =0x40A00000\n\
-	bl __divsf3\n\
-	bl __fixunssfsi\n\
-	lsls r0, 16\n\
-	lsrs r4, r0, 16\n\
-	lsls r0, r4, 1\n\
-	adds r0, r4\n\
-	movs r2, 0x82\n\
-	adds r2, r6\n\
-	mov r8, r2\n\
-	strh r0, [r2]\n\
-	adds r0, r6, 0\n\
-	adds r0, 0x84\n\
-	strh r4, [r0]\n\
-	adds r0, 0x2\n\
-	strh r4, [r0]\n\
-	movs r0, 0x88\n\
-	adds r0, r6\n\
-	mov r9, r0\n\
-	movs r0, 0x1\n\
-	ands r0, r7\n\
-	lsls r1, r5, 24\n\
-	asrs r1, 24\n\
-	adds r0, r1\n\
-	lsls r0, 1\n\
-	add r0, sp\n\
-	movs r1, 0\n\
-	ldrsh r4, [r0, r1]\n\
-	adds r0, r4, 0\n\
-	bl __floatsisf\n\
-	cmp r4, 0\n\
-	bge _08141468\n\
-	ldr r1, _08141538  @ =0x47800000\n\
-	bl __addsf3\n\
-_08141468:\n\
-	mov r2, r9\n\
-	str r0, [r2]\n\
-	adds r7, r6, 0\n\
-	adds r7, 0x8C\n\
-	ldrb r0, [r6, 0x4]\n\
-	lsls r0, 30\n\
-	lsrs r0, 25\n\
-	ldr r5, _08141534  @ =gUnknown_085B6348\n\
-	adds r0, r5\n\
-	movs r1, 0x18\n\
-	ldrsh r4, [r0, r1]\n\
-	adds r0, r4, 0\n\
-	bl __floatsisf\n\
-	adds r5, r0, 0\n\
-	cmp r4, 0\n\
-	bge _08141492\n\
-	ldr r1, _08141538  @ =0x47800000\n\
-	bl __addsf3\n\
-	adds r5, r0, 0\n\
-_08141492:\n\
-	str r5, [r7]\n\
-	adds r7, r6, 0\n\
-	adds r7, 0x90\n\
-	ldr r1, _08141540  @ =0x3F000000\n\
-	adds r0, r5, 0\n\
-	bl __mulsf3\n\
-	adds r1, r5, 0\n\
-	bl __subsf3\n\
-	adds r5, r0, 0\n\
-	mov r2, r8\n\
-	movs r0, 0\n\
-	ldrsh r4, [r2, r0]\n\
-	adds r0, r4, 0\n\
-	bl __floatsisf\n\
-	adds r2, r0, 0\n\
-	cmp r4, 0\n\
-	bge _081414C2\n\
-	ldr r1, _08141538  @ =0x47800000\n\
-	bl __addsf3\n\
-	adds r2, r0, 0\n\
-_081414C2:\n\
-	adds r0, r5, 0\n\
-	adds r1, r2, 0\n\
-	bl __divsf3\n\
-	str r0, [r7]\n\
-	adds r1, r6, 0\n\
-	adds r1, 0x94\n\
-	ldr r0, _08141544  @ =0x42880000\n\
-	str r0, [r1]\n\
-	adds r1, 0x8\n\
-	ldr r0, _08141548  @ =0x00000000\n\
-	str r0, [r1]\n\
-	adds r5, r6, 0\n\
-	adds r5, 0x98\n\
-	mov r1, r8\n\
-	movs r2, 0\n\
-	ldrsh r4, [r1, r2]\n\
-	adds r0, r4, 0\n\
-	bl __floatsisf\n\
-	adds r2, r0, 0\n\
-	cmp r4, 0\n\
-	bge _081414F8\n\
-	ldr r1, _08141538  @ =0x47800000\n\
-	bl __addsf3\n\
-	adds r2, r0, 0\n\
-_081414F8:\n\
-	ldr r0, _0814154C  @ =0x41000000\n\
-	adds r1, r2, 0\n\
-	bl __divsf3\n\
-	bl __negsf2\n\
-	str r0, [r5]\n\
-	adds r1, r6, 0\n\
-	adds r1, 0xA0\n\
-	ldr r0, _08141550  @ =0x42100000\n\
-	str r0, [r1]\n\
-	ldr r1, _08141554  @ =gTasks\n\
-	mov r5, r10\n\
-	lsls r0, r5, 2\n\
-	add r0, r10\n\
-	lsls r0, 3\n\
-	adds r0, r1\n\
-	ldr r1, _08141558  @ =sub_814155C\n\
-	str r1, [r0]\n\
-	add sp, 0x8\n\
-	pop {r3-r5}\n\
-	mov r8, r3\n\
-	mov r9, r4\n\
-	mov r10, r5\n\
-	pop {r4-r7}\n\
-	pop {r0}\n\
-	bx r0\n\
-	.align 2, 0\n\
-_08141530:\n\
-	.4byte gUnknown_0203AB88\n\
-_08141534:\n\
-	.4byte gUnknown_085B6348\n\
-_08141538:\n\
-	.4byte 0x47800000\n\
-_0814153C:\n\
-	.4byte 0x40A00000\n\
-_08141540:\n\
-	.4byte 0x3F000000\n\
-_08141544:\n\
-	.4byte 0x42880000\n\
-_08141548:\n\
-	.4byte 0x00000000\n\
-_0814154C:\n\
-	.4byte 0x41000000\n\
-_08141550:\n\
-	.4byte 0x42100000\n\
-_08141554:\n\
-	.4byte gTasks\n\
-_08141558:\n\
-	.4byte sub_814155C");
-}
-#endif // NONMATCHING
 
 static void sub_814155C(u8 taskId)
 {
@@ -1809,14 +1552,14 @@ static void sub_814189C(u8 taskId)
         {
             PlayFanfare(MUS_ME_B_BIG);
             DrawStdWindowFrame(gUnknown_0203AB8C, FALSE);
-            AddTextPrinterParameterized(gUnknown_0203AB8C, 1, gUnknown_082A5BD7, 0, 1, TEXT_SPEED_FF, NULL);
+            AddTextPrinterParameterized(gUnknown_0203AB8C, 1, Roulette_Text_Jackpot, 0, 1, TEXT_SPEED_FF, NULL);
             CopyWindowToVram(gUnknown_0203AB8C, 3);
         }
         else
         {
             PlayFanfare(MUS_ME_B_SMALL);
             DrawStdWindowFrame(gUnknown_0203AB8C, FALSE);
-            AddTextPrinterParameterized(gUnknown_0203AB8C, 1, gUnknown_082A5BCB, 0, 1, TEXT_SPEED_FF, NULL);
+            AddTextPrinterParameterized(gUnknown_0203AB8C, 1, Roulette_Text_ItsAHit, 0, 1, TEXT_SPEED_FF, NULL);
             CopyWindowToVram(gUnknown_0203AB8C, 3);
         }
         break;
@@ -1824,7 +1567,7 @@ static void sub_814189C(u8 taskId)
     default:
         m4aSongNumStart(SE_HAZURE);
         DrawStdWindowFrame(gUnknown_0203AB8C, FALSE);
-        AddTextPrinterParameterized(gUnknown_0203AB8C, 1, gUnknown_082A5BE0, 0, 1, TEXT_SPEED_FF, NULL);
+        AddTextPrinterParameterized(gUnknown_0203AB8C, 1, Roulette_Text_NothingDoing, 0, 1, TEXT_SPEED_FF, NULL);
         CopyWindowToVram(gUnknown_0203AB8C, 3);
         break;
     }
@@ -1866,7 +1609,7 @@ static void sub_8141984(u8 taskId)
 static void sub_8141A18(u8 taskId)
 {
     ConvertIntToDecimalStringN(gStringVar1, (gUnknown_0203AB88->var19 * gTasks[taskId].data[2]), STR_CONV_MODE_LEFT_ALIGN, 2);
-    StringExpandPlaceholders(gStringVar4, gUnknown_082A5BEF);
+    StringExpandPlaceholders(gStringVar4, Roulette_Text_YouveWonXCoins);
     DrawStdWindowFrame(gUnknown_0203AB8C, FALSE);
     AddTextPrinterParameterized(gUnknown_0203AB8C, 1, gStringVar4, 0, 1, TEXT_SPEED_FF, NULL);
     CopyWindowToVram(gUnknown_0203AB8C, 3);
@@ -1901,14 +1644,14 @@ static void sub_8141B58(u8 taskId)
         if (gTasks[taskId].data[6] == 6)
         {
             DrawStdWindowFrame(gUnknown_0203AB8C, FALSE);
-            AddTextPrinterParameterized(gUnknown_0203AB8C, 1, gUnknown_082A5C21, 0, 1, TEXT_SPEED_FF, NULL);
+            AddTextPrinterParameterized(gUnknown_0203AB8C, 1, Roulette_Text_BoardWillBeCleared, 0, 1, TEXT_SPEED_FF, NULL);
             CopyWindowToVram(gUnknown_0203AB8C, 3);
             sub_8141F7C(taskId, dp01t_12_3_battle_menu, 0xFFFF, 3);
         }
         else if (gTasks[taskId].data[13] == 9999)
         {
             DrawStdWindowFrame(gUnknown_0203AB8C, FALSE);
-            AddTextPrinterParameterized(gUnknown_0203AB8C, 1, gUnknown_082A5C61, 0, 1, TEXT_SPEED_FF, NULL);
+            AddTextPrinterParameterized(gUnknown_0203AB8C, 1, Roulette_Text_CoinCaseIsFull, 0, 1, TEXT_SPEED_FF, NULL);
             CopyWindowToVram(gUnknown_0203AB8C, 3);
             sub_8141F7C(taskId, sub_8140914, 0xFFFF, 0x3);
         }
@@ -1920,7 +1663,7 @@ static void sub_8141B58(u8 taskId)
     else
     {
         DrawStdWindowFrame(gUnknown_0203AB8C, FALSE);
-        AddTextPrinterParameterized(gUnknown_0203AB8C, 1, gUnknown_082A5C04, 0, 1, TEXT_SPEED_FF, NULL);
+        AddTextPrinterParameterized(gUnknown_0203AB8C, 1, Roulette_Text_NoCoinsLeft, 0, 1, TEXT_SPEED_FF, NULL);
         CopyWindowToVram(gUnknown_0203AB8C, 3);
         sub_8141F7C(taskId, sub_8140994, 0x3C, 0x3);
     }
@@ -1945,7 +1688,7 @@ static void dp01t_12_3_battle_menu(u8 taskId)
     if (gTasks[taskId].data[13] == 9999)
     {
         DrawStdWindowFrame(gUnknown_0203AB8C, FALSE);
-        AddTextPrinterParameterized(gUnknown_0203AB8C, 1, gUnknown_082A5C61, 0, 1, TEXT_SPEED_FF, NULL);
+        AddTextPrinterParameterized(gUnknown_0203AB8C, 1, Roulette_Text_CoinCaseIsFull, 0, 1, TEXT_SPEED_FF, NULL);
         CopyWindowToVram(gUnknown_0203AB8C, 3);
         sub_8141F7C(taskId, sub_8140914, 0xFFFF, 3);
     }
@@ -1984,7 +1727,7 @@ static void sub_8141E7C(u8 taskId) // end roulette ?
         ResetPaletteFade();
         ResetSpriteData();
         sub_8140418();
-        gFieldCallback = FieldCallback_ReturnToEventScript2;
+        gFieldCallback = FieldCB_ContinueScriptHandleMusic;
         SetMainCallback2(CB2_ReturnToField);
         DestroyTask(taskId);
     }
@@ -3378,7 +3121,7 @@ static void sub_81429F0(u8 taskId)
     {
         u32 temp = gUnknown_085B6344[(gSpecialVar_0x8004 & 1) + (gSpecialVar_0x8004 >> 7 << 1)];
         ConvertIntToDecimalStringN(gStringVar1, temp, STR_CONV_MODE_LEADING_ZEROS, 1);
-        StringExpandPlaceholders(gStringVar4, gUnknown_082A5B12);
+        StringExpandPlaceholders(gStringVar4, Roulette_Text_PlayMinimumWagerIsX);
         DrawStdWindowFrame(0, FALSE);
         AddTextPrinterParameterized(0, 1, gStringVar4, 0, 1, TEXT_SPEED_FF, NULL);
         CopyWindowToVram(0, 3);
@@ -3391,19 +3134,19 @@ static void Task_Roulette_0(u8 taskId)
     s32 temp;
     PrintCoinsString(gTasks[taskId].data[13]);
     temp = gUnknown_085B6344[(gSpecialVar_0x8004 & 1) + (gSpecialVar_0x8004 >> 7 << 1)];
-    ConvertIntToDecimalStringN(gStringVar1, temp, 2, 1);
+    ConvertIntToDecimalStringN(gStringVar1, temp, STR_CONV_MODE_LEADING_ZEROS, 1);
     if (gTasks[taskId].data[13] >= temp)
     {
         if ((gSpecialVar_0x8004 & 0x80) && (gSpecialVar_0x8004 & 1))
         {
             DrawStdWindowFrame(0, FALSE);
-            AddTextPrinterParameterized(0, 1, gUnknown_082A5B6B, 0, 1, TEXT_SPEED_FF, NULL);
+            AddTextPrinterParameterized(0, 1, Roulette_Text_SpecialRateTable, 0, 1, TEXT_SPEED_FF, NULL);
             CopyWindowToVram(0, 3);
             gTasks[taskId].func = sub_81429F0;
         }
         else
         {
-            StringExpandPlaceholders(gStringVar4, gUnknown_082A5B12);
+            StringExpandPlaceholders(gStringVar4, Roulette_Text_PlayMinimumWagerIsX);
             DrawStdWindowFrame(0, FALSE);
             AddTextPrinterParameterized(0, 1, gStringVar4, 0, 1, TEXT_SPEED_FF, NULL);
             CopyWindowToVram(0, 3);
@@ -3412,7 +3155,7 @@ static void Task_Roulette_0(u8 taskId)
     }
     else
     {
-        StringExpandPlaceholders(gStringVar4, gUnknown_082A5B4E);
+        StringExpandPlaceholders(gStringVar4, Roulette_Text_NotEnoughCoins);
         DrawStdWindowFrame(0, FALSE);
         AddTextPrinterParameterized(0, 1, gStringVar4, 0, 1, TEXT_SPEED_FF, NULL);
         CopyWindowToVram(0, 3);
@@ -4251,8 +3994,8 @@ static void sub_8144514(struct Sprite *sprite)
     if (gUnknown_0203AB88->var94 > 40.f)
         return;
 
-    gUnknown_0203AB88->var98 = -(4.0f / (float)gUnknown_0203AB88->var86);
-    gUnknown_0203AB88->var90 = -(gUnknown_0203AB88->var8C / (float)gUnknown_0203AB88->var86);
+    gUnknown_0203AB88->var98 = -(4.0f / (float)(gUnknown_0203AB88->var86));
+    gUnknown_0203AB88->var90 = -(gUnknown_0203AB88->var8C / (float)(gUnknown_0203AB88->var86));
     sprite->animNum = 2;
     sprite->animBeginning = TRUE;
     sprite->animEnded = FALSE;
@@ -4267,8 +4010,8 @@ static void sub_81445D8(struct Sprite *sprite)
         return;
 
     m4aSongNumStartOrChange(SE_TAMAKORO_E);
-    gUnknown_0203AB88->var98 = -(20.0f / (float)gUnknown_0203AB88->var84);
-    gUnknown_0203AB88->var90 = ((1.0f - gUnknown_0203AB88->var8C) / (float)gUnknown_0203AB88->var84);
+    gUnknown_0203AB88->var98 = -(20.0f / (float)(gUnknown_0203AB88->var84));
+    gUnknown_0203AB88->var90 = ((1.0f - gUnknown_0203AB88->var8C) / (float)(gUnknown_0203AB88->var84));
     sprite->animNum = 1;
     sprite->animBeginning = TRUE;
     sprite->animEnded = FALSE;
@@ -4300,7 +4043,7 @@ static void sub_81446DC(struct Sprite *sprite)
     gUnknown_0203AB88->var3C[55] = CreateSprite(&gSpriteTemplate_85B79F8, 36, -12, 50);
     gUnknown_0203AB88->var3C[56] = CreateSprite(&gSpriteTemplate_85B7ABC[0], s[sprite->data[0]][0], s[sprite->data[0]][1], 59);
     gUnknown_0203AB88->var3C[57] = CreateSprite(&gSpriteTemplate_85B7ABC[1], 36, 140, 51);
-    gSprites[gUnknown_0203AB88->var3C[57]].oam.objMode = 1;
+    gSprites[gUnknown_0203AB88->var3C[57]].oam.objMode = ST_OAM_OBJ_BLEND;
     for (i = 0; i < 3; i++)
     {
         gSprites[gUnknown_0203AB88->var3C[i + 55]].coordOffsetEnabled = FALSE;
@@ -4345,17 +4088,17 @@ static void sub_81448B8(struct Sprite *sprite)
     gUnknown_0203AB88->var38 = sprite;
 }
 
-#ifdef NONMATCHING
 static void sub_8144A24(struct Sprite *sprite)
 {
     u8 z;
     u16 o;
-    u8 h = 0; // r10 (sp+0xc)
-    u8 j = 5; // r9 (r9)
-    u8 p = 0; // sp+0xc (sp+0x10)
-    u8 i;
-    u8 s[10] = {}; // sp+0 (sp+0)
-    u16 t = Random(); // sp+0x10 (r10)
+    u8 h = 0;
+    u8 j = 5;
+    u8 p = 0;
+    u8 i = 0;
+    u8 val;
+    u8 s[10] = {};
+    u16 rand = Random();
 
     gUnknown_0203AB88->var7D = 1;
     gUnknown_0203AB88->var03_5 = TRUE;
@@ -4364,13 +4107,14 @@ static void sub_8144A24(struct Sprite *sprite)
     gUnknown_0203AB88->var88 = sprite->data[3];
     gUnknown_0203AB88->var98 = 0.0f;
     gUnknown_0203AB88->var8C = gUnknown_085B6348[gUnknown_0203AB88->var04_0].var1C;
+
     o = (gUnknown_0203AB88->var04_0 * 30 + 33) + (0x1 - gUnknown_0203AB88->var03_0) * 15;
     for (i = 0; i < 4; i++)
     {
         if (o < sprite->data[3] && sprite->data[3] <= o + 90)
         {
             sprite->data[0] = i / 2;
-            gUnknown_0203AB88->var03_0 = i & 1;
+            gUnknown_0203AB88->var03_0 = i % 2;
             break;
         }
         if (i == 3)
@@ -4381,354 +4125,52 @@ static void sub_8144A24(struct Sprite *sprite)
         }
         o += 90;
     }
+
     if (gUnknown_0203AB88->var03_0)
     {
         if (sprite->data[0])
-        {
             PlayCry1(SPECIES_TAILLOW, -63);
-        }
         else
-        {
             PlayCry1(SPECIES_TAILLOW, 63);
-        }
     }
     else
     {
         PlayCry1(SPECIES_SHROOMISH, -63);
     }
-    i = 2;
+
+    val = 2;
     z = (gUnknown_0203AB88->var7F + 2) % 12;
+
     if (gUnknown_0203AB88->var03_0 == 1 && gUnknown_0203AB88->var04_0 == 1)
         j += 6;
     else
-        j += i;
-    for (; i < j; i++)
+        j += val;
+
+    for (i = val; i < j; i++)
     {
         if (!(gUnknown_0203AB88->var08 & gUnknown_085B62E4[z].var04))
         {
             s[h++] = i;
-            if (!p && (gUnknown_085B62E4[z].var04 & gUnknown_085B6154[gUnknown_0203AB88->var1B[gUnknown_0203AB88->var1A_0]].var00))
-            {
+            if (p == 0 && (gUnknown_085B62E4[z].var04 & gUnknown_085B6154[gUnknown_0203AB88->var1B[gUnknown_0203AB88->var1A_0]].var0C))
                 p = i;
-            }
         }
         z = (z + 1) % 0xC;
     }
+
     if ((gUnknown_0203AB88->var03_0 + 1) & gUnknown_0203AB88->var02)
     {
-        if (p && (t & 0xFF) < 0xc0)
-        {
+        if (p && (rand & 0xFF) < 0xc0)
             sprite->data[7] = p;
-        }
         else
-        {
-            sprite->data[7] = s[t % h];
-        }
+            sprite->data[7] = s[rand % h];
     }
     else
     {
-        sprite->data[7] = s[t % h];
+        sprite->data[7] = s[rand % h];
     }
+
     sprite->callback = sub_8144168;
 }
-#else
-NAKED
-static void sub_8144A24(struct Sprite *sprite)
-{
-    asm_unified("push {r4-r7,lr}\n\
-	mov r7, r10\n\
-	mov r6, r9\n\
-	mov r5, r8\n\
-	push {r5-r7}\n\
-	sub sp, 0x14\n\
-	adds r7, r0, 0\n\
-	movs r0, 0\n\
-	mov r9, r0\n\
-	movs r1, 0x5\n\
-	mov r8, r1\n\
-	str r0, [sp, 0xC]\n\
-	mov r0, sp\n\
-	movs r1, 0\n\
-	movs r2, 0xA\n\
-	bl memset\n\
-	bl Random\n\
-	lsls r0, 16\n\
-	lsrs r0, 16\n\
-	str r0, [sp, 0x10]\n\
-	ldr r3, _08144B10  @ =gUnknown_0203AB88\n\
-	ldr r0, [r3]\n\
-	adds r0, 0x7D\n\
-	movs r5, 0x1\n\
-	strb r5, [r0]\n\
-	ldr r2, [r3]\n\
-	ldrb r0, [r2, 0x3]\n\
-	movs r1, 0x20\n\
-	orrs r0, r1\n\
-	strb r0, [r2, 0x3]\n\
-	ldr r2, [r3]\n\
-	ldrb r1, [r2, 0x3]\n\
-	movs r0, 0x41\n\
-	negs r0, r0\n\
-	ands r0, r1\n\
-	strb r0, [r2, 0x3]\n\
-	ldr r0, [r3]\n\
-	adds r0, 0x7E\n\
-	movs r1, 0xFF\n\
-	strb r1, [r0]\n\
-	ldr r6, [r3]\n\
-	adds r4, r6, 0\n\
-	adds r4, 0x88\n\
-	movs r1, 0x34\n\
-	ldrsh r0, [r7, r1]\n\
-	bl __floatsisf\n\
-	str r0, [r4]\n\
-	adds r1, r6, 0\n\
-	adds r1, 0x98\n\
-	ldr r0, _08144B14  @ =0x00000000\n\
-	str r0, [r1]\n\
-	adds r2, r6, 0\n\
-	adds r2, 0x8C\n\
-	ldr r1, _08144B18  @ =gUnknown_085B6348\n\
-	ldrb r0, [r6, 0x4]\n\
-	lsls r0, 30\n\
-	lsrs r0, 25\n\
-	adds r1, 0x1C\n\
-	adds r0, r1\n\
-	ldr r0, [r0]\n\
-	str r0, [r2]\n\
-	ldrb r0, [r6, 0x4]\n\
-	lsls r0, 30\n\
-	lsrs r0, 30\n\
-	lsls r1, r0, 4\n\
-	subs r1, r0\n\
-	lsls r1, 1\n\
-	adds r1, 0x21\n\
-	ldrb r0, [r6, 0x3]\n\
-	lsls r0, 27\n\
-	lsrs r0, 27\n\
-	subs r5, r0\n\
-	lsls r0, r5, 4\n\
-	subs r0, r5\n\
-	adds r1, r0\n\
-	lsls r1, 16\n\
-	lsrs r1, 16\n\
-	mov r5, r9\n\
-	movs r0, 0x34\n\
-	ldrsh r2, [r7, r0]\n\
-_08144ACA:\n\
-	cmp r1, r2\n\
-	bge _08144AD6\n\
-	adds r0, r1, 0\n\
-	adds r0, 0x5A\n\
-	cmp r2, r0\n\
-	ble _08144B38\n\
-_08144AD6:\n\
-	cmp r5, 0x3\n\
-	beq _08144B1C\n\
-	adds r0, r1, 0\n\
-	adds r0, 0x5A\n\
-	lsls r0, 16\n\
-	lsrs r1, r0, 16\n\
-	adds r0, r5, 0x1\n\
-	lsls r0, 24\n\
-	lsrs r5, r0, 24\n\
-	cmp r5, 0x3\n\
-	bls _08144ACA\n\
-_08144AEC:\n\
-	ldr r0, _08144B10  @ =gUnknown_0203AB88\n\
-	ldr r0, [r0]\n\
-	ldrb r1, [r0, 0x3]\n\
-	movs r0, 0x1F\n\
-	ands r0, r1\n\
-	cmp r0, 0\n\
-	beq _08144B64\n\
-	movs r1, 0x2E\n\
-	ldrsh r0, [r7, r1]\n\
-	cmp r0, 0\n\
-	beq _08144B58\n\
-	movs r0, 0x98\n\
-	lsls r0, 1\n\
-	movs r1, 0x3F\n\
-	negs r1, r1\n\
-	bl PlayCry1\n\
-	b _08144B70\n\
-	.align 2, 0\n\
-_08144B10:\n\
-	.4byte gUnknown_0203AB88\n\
-_08144B14:\n\
-	.4byte 0x00000000\n\
-_08144B18:\n\
-	.4byte gUnknown_085B6348\n\
-_08144B1C:\n\
-	movs r0, 0x1\n\
-	strh r0, [r7, 0x2E]\n\
-	ldr r0, =gUnknown_0203AB88\n\
-	ldr r2, [r0]\n\
-	ldrb r1, [r2, 0x3]\n\
-	movs r0, 0x20\n\
-	negs r0, r0\n\
-	ands r0, r1\n\
-	movs r1, 0x1\n\
-	orrs r0, r1\n\
-	strb r0, [r2, 0x3]\n\
-	b _08144AEC\n\
-	.pool\n\
-_08144B38:\n\
-	lsrs r0, r5, 1\n\
-	strh r0, [r7, 0x2E]\n\
-	ldr r0, =gUnknown_0203AB88\n\
-	ldr r3, [r0]\n\
-	movs r1, 0x1\n\
-	ands r1, r5\n\
-	ldrb r2, [r3, 0x3]\n\
-	movs r0, 0x20\n\
-	negs r0, r0\n\
-	ands r0, r2\n\
-	orrs r0, r1\n\
-	strb r0, [r3, 0x3]\n\
-	b _08144AEC\n\
-	.pool\n\
-_08144B58:\n\
-	movs r0, 0x98\n\
-	lsls r0, 1\n\
-	movs r1, 0x3F\n\
-	bl PlayCry1\n\
-	b _08144B70\n\
-_08144B64:\n\
-	movs r0, 0x99\n\
-	lsls r0, 1\n\
-	movs r1, 0x3F\n\
-	negs r1, r1\n\
-	bl PlayCry1\n\
-_08144B70:\n\
-	movs r0, 0x2\n\
-	mov r10, r0\n\
-	ldr r4, =gUnknown_0203AB88\n\
-	ldr r5, [r4]\n\
-	adds r0, r5, 0\n\
-	adds r0, 0x7F\n\
-	ldrb r0, [r0]\n\
-	adds r0, 0x2\n\
-	movs r1, 0xC\n\
-	bl __modsi3\n\
-	lsls r0, 24\n\
-	lsrs r6, r0, 24\n\
-	ldrb r1, [r5, 0x3]\n\
-	movs r0, 0x1F\n\
-	ands r0, r1\n\
-	cmp r0, 0x1\n\
-	bne _08144BA8\n\
-	ldrb r1, [r5, 0x4]\n\
-	movs r0, 0x3\n\
-	ands r0, r1\n\
-	cmp r0, 0x1\n\
-	bne _08144BA8\n\
-	mov r0, r8\n\
-	adds r0, 0x6\n\
-	b _08144BAC\n\
-	.pool\n\
-_08144BA8:\n\
-	mov r0, r8\n\
-	add r0, r10\n\
-_08144BAC:\n\
-	lsls r0, 24\n\
-	lsrs r0, 24\n\
-	mov r8, r0\n\
-	mov r5, r10\n\
-	cmp r5, r8\n\
-	bcs _08144C18\n\
-	ldr r1, =gUnknown_085B6154+0xC\n\
-	mov r10, r1\n\
-_08144BBC:\n\
-	ldr r3, [r4]\n\
-	lsls r0, r6, 3\n\
-	ldr r1, =gUnknown_085B62E4+0x4\n\
-	adds r0, r1\n\
-	ldr r1, [r3, 0x8]\n\
-	ldr r2, [r0]\n\
-	ands r1, r2\n\
-	cmp r1, 0\n\
-	bne _08144C02\n\
-	mov r0, r9\n\
-	adds r1, r0, 0x1\n\
-	lsls r1, 24\n\
-	lsrs r1, 24\n\
-	mov r9, r1\n\
-	add r0, sp\n\
-	strb r5, [r0]\n\
-	ldr r0, [sp, 0xC]\n\
-	cmp r0, 0\n\
-	bne _08144C02\n\
-	ldrb r1, [r3, 0x1A]\n\
-	lsls r1, 28\n\
-	lsrs r1, 28\n\
-	adds r0, r3, 0\n\
-	adds r0, 0x1B\n\
-	adds r0, r1\n\
-	ldrb r1, [r0]\n\
-	lsls r0, r1, 2\n\
-	adds r0, r1\n\
-	lsls r0, 2\n\
-	add r0, r10\n\
-	ldr r0, [r0]\n\
-	ands r2, r0\n\
-	cmp r2, 0\n\
-	beq _08144C02\n\
-	str r5, [sp, 0xC]\n\
-_08144C02:\n\
-	adds r0, r6, 0x1\n\
-	movs r1, 0xC\n\
-	bl __modsi3\n\
-	lsls r0, 24\n\
-	lsrs r6, r0, 24\n\
-	adds r0, r5, 0x1\n\
-	lsls r0, 24\n\
-	lsrs r5, r0, 24\n\
-	cmp r5, r8\n\
-	bcc _08144BBC\n\
-_08144C18:\n\
-	ldr r0, [r4]\n\
-	ldrb r1, [r0, 0x3]\n\
-	lsls r1, 27\n\
-	lsrs r1, 27\n\
-	adds r1, 0x1\n\
-	ldrb r0, [r0, 0x2]\n\
-	ands r1, r0\n\
-	cmp r1, 0\n\
-	beq _08144C48\n\
-	ldr r1, [sp, 0xC]\n\
-	cmp r1, 0\n\
-	beq _08144C48\n\
-	movs r0, 0xFF\n\
-	ldr r1, [sp, 0x10]\n\
-	ands r0, r1\n\
-	cmp r0, 0xBF\n\
-	bhi _08144C48\n\
-	mov r0, sp\n\
-	ldrh r0, [r0, 0xC]\n\
-	b _08144C54\n\
-	.pool\n\
-_08144C48:\n\
-	ldr r0, [sp, 0x10]\n\
-	mov r1, r9\n\
-	bl __modsi3\n\
-	add r0, sp\n\
-	ldrb r0, [r0]\n\
-_08144C54:\n\
-	strh r0, [r7, 0x3C]\n\
-	ldr r1, =sub_8144168\n\
-	str r1, [r7, 0x1C]\n\
-	add sp, 0x14\n\
-	pop {r3-r5}\n\
-	mov r8, r3\n\
-	mov r9, r4\n\
-	mov r10, r5\n\
-	pop {r4-r7}\n\
-	pop {r0}\n\
-	bx r0\n\
-	.pool");
-}
-#endif // NONMATCHING
 
 static const u16 gUnknown_085B7B1A[] = {
     0x907,
@@ -4955,7 +4397,7 @@ static void sub_81450D8(struct Sprite *sprite)
 static void sub_8145218(struct Sprite *sprite)
 {
     s8 t[2] = {-1, 1};
-    
+
     if (sprite->data[1]-- >= 0)
     {
         sprite->pos1.x += t[gUnknown_0203AB88->var38->data[0]] * 2;

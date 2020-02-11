@@ -12,7 +12,7 @@
 #include "bg.h"
 #include "palette.h"
 #include "decompress.h"
-#include "alloc.h"
+#include "malloc.h"
 #include "gpu_regs.h"
 #include "text.h"
 #include "text_window.h"
@@ -36,6 +36,8 @@
 #include "new_game.h"
 #include "save.h"
 #include "link.h"
+#include "constants/berry.h"
+#include "constants/rgb.h"
 
 #define BLENDER_SCORE_BEST      0
 #define BLENDER_SCORE_GOOD      1
@@ -193,10 +195,10 @@ EWRAM_DATA static s32 sUnknown_020322BC[5] = {0};
 EWRAM_DATA static u32 sUnknown_020322D0 = 0;
 
 // IWRAM bss
-IWRAM_DATA static s16 sUnknown_03000DE8[8];
-IWRAM_DATA static s16 sUnknown_03000DF8[6];
-IWRAM_DATA static s16 sUnknown_03000E04;
-IWRAM_DATA static s16 sUnknown_03000E06;
+static s16 sUnknown_03000DE8[8];
+static s16 sUnknown_03000DF8[6];
+static s16 sUnknown_03000E04;
+static s16 sUnknown_03000E06;
 
 // IWRAM common
 u8 gInGameOpponentsNo;
@@ -400,10 +402,10 @@ static const TaskFunc sUnknown_083399EC[] =
 static const struct OamData sOamData_8216314 =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(32x32),
     .x = 0,
     .matrixNum = 0,
@@ -543,10 +545,10 @@ static const struct SpriteTemplate sBlenderSyncArrow_SpriteTemplate =
 static const struct OamData sOamData_821640C =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(16x16),
     .x = 0,
     .matrixNum = 0,
@@ -612,10 +614,10 @@ static const struct SpriteTemplate sUnknown_08339B40 =
 static const struct OamData sOamData_8216474 =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(8x8),
     .x = 0,
     .matrixNum = 0,
@@ -699,10 +701,10 @@ static const struct SpriteTemplate sUnknown_08339BE0 =
 static const struct OamData sOamData_8216514 =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(32x32),
     .x = 0,
     .matrixNum = 0,
@@ -757,10 +759,10 @@ static const struct SpriteTemplate sUnknown_08339C2C =
 static const struct OamData sOamData_8216560 =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(64x32),
     .x = 0,
     .matrixNum = 0,
@@ -996,7 +998,7 @@ static void sub_807FAC8(void)
             }
             if (gReceivedRemoteLinkPlayers != 0 && gWirelessCommType)
             {
-                sub_800E0E8();
+                LoadWirelessStatusIndicatorSpriteGfx();
                 CreateWirelessStatusIndicatorSprite(0, 0);
             }
             SetVBlankCallback(VBlankCB0_BerryBlender);
@@ -1004,7 +1006,7 @@ static void sub_807FAC8(void)
         }
         break;
     case 2:
-        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, 0);
+        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, RGB_BLACK);
         sub_8082D28();
         sBerryBlenderData->mainState++;
         break;
@@ -1018,7 +1020,7 @@ static void sub_807FAC8(void)
             sBerryBlenderData->mainState++;
         break;
     case 5:
-        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, 0);
+        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, RGB_BLACK);
         sBerryBlenderData->mainState++;
         break;
     case 6:
@@ -1028,7 +1030,7 @@ static void sub_807FAC8(void)
             UnsetBgTilemapBuffer(2);
             UnsetBgTilemapBuffer(1);
             SetVBlankCallback(NULL);
-            sub_81AABF0(sub_807FFA4);
+            ChooseBerrySetCallback(sub_807FFA4);
 
             sBerryBlenderData->mainState = 0;
         }
@@ -1077,7 +1079,7 @@ static void sub_807FD64(struct Sprite* sprite, s16 a2, s16 a3, s16 a4, s16 a5, s
 
 static void sub_807FD90(u16 a0, u8 a1)
 {
-    u8 spriteId = sub_80D511C(a0 + 123, 0, 80, a1 & 1);
+    u8 spriteId = LoadSpinningBerryPicGfx(a0 + 123, 0, 80, a1 & 1);
     sub_807FD64(&gSprites[spriteId], sUnknown_08339C78[a1][0], sUnknown_08339C78[a1][1], sUnknown_08339C78[a1][2], sUnknown_08339C78[a1][3], sUnknown_08339C78[a1][4]);
 }
 
@@ -1107,7 +1109,7 @@ static void Blender_SetPlayerNamesLocal(u8 opponentsNum)
         sBerryBlenderData->playersNo = 2;
         StringCopy(gLinkPlayers[0].name, gSaveBlock2Ptr->playerName);
 
-        if (!FlagGet(FLAG_HIDE_LILYCOVE_CONTEST_HALL_BLEND_MASTER_ONLOOKERS))
+        if (!FlagGet(FLAG_HIDE_LILYCOVE_CONTEST_HALL_BLEND_MASTER))
             StringCopy(gLinkPlayers[1].name, sBlenderOpponentsNames[BLENDER_MASTER]);
         else
             StringCopy(gLinkPlayers[1].name, sBlenderOpponentsNames[BLENDER_MISTER]);
@@ -1172,7 +1174,7 @@ static void sub_8080018(void)
     {
     case 0:
         sub_8080588();
-        gLinkType = 0x4422;
+        gLinkType = LINKTYPE_BERRY_BLENDER;
         sBerryBlenderData->field_72 = 0;
         for (i = 0; i < BLENDER_MAX_PLAYERS; i++)
         {
@@ -1202,13 +1204,13 @@ static void sub_8080018(void)
         }
         if (gReceivedRemoteLinkPlayers != 0 && gWirelessCommType)
         {
-            sub_800E0E8();
+            LoadWirelessStatusIndicatorSpriteGfx();
             CreateWirelessStatusIndicatorSprite(0, 0);
         }
         sBerryBlenderData->mainState++;
         break;
     case 3:
-        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, 0);
+        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, RGB_BLACK);
         sBerryBlenderData->mainState++;
         break;
     case 4:
@@ -1430,7 +1432,7 @@ static void Blender_SetOpponentsBerryData(u16 playerBerryItemId, u8 playersNum, 
     {
         opponentBerryId = sOpponentBerrySets[opponentSetId][i];
         var = playerBerryItemId - 163;
-        if (!FlagGet(FLAG_HIDE_LILYCOVE_CONTEST_HALL_BLEND_MASTER_ONLOOKERS) && gSpecialVar_0x8004 == 1)
+        if (!FlagGet(FLAG_HIDE_LILYCOVE_CONTEST_HALL_BLEND_MASTER) && gSpecialVar_0x8004 == 1)
         {
             opponentSetId %= 5;
             opponentBerryId = sSpecialOpponentBerrySets[opponentSetId];
@@ -1515,7 +1517,7 @@ static void sub_80808D4(void)
 
         sBerryBlenderData->playAgainState = 0;
         sBerryBlenderData->loadGfxState = 0;
-        gLinkType = 0x4422;
+        gLinkType = LINKTYPE_BERRY_BLENDER;
         sBerryBlenderData->mainState++;
         break;
     case 1:
@@ -1534,7 +1536,7 @@ static void sub_80808D4(void)
         sBerryBlenderData->mainState++;
         break;
     case 3:
-        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, 0);
+        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, RGB_BLACK);
         sBerryBlenderData->mainState++;
         sBerryBlenderData->framesToWait = 0;
         break;
@@ -1630,7 +1632,7 @@ static void sub_80808D4(void)
 
         if (gSpecialVar_0x8004 == 1)
         {
-            if (!FlagGet(FLAG_HIDE_LILYCOVE_CONTEST_HALL_BLEND_MASTER_ONLOOKERS))
+            if (!FlagGet(FLAG_HIDE_LILYCOVE_CONTEST_HALL_BLEND_MASTER))
                 sBerryBlenderData->field_120[0] = CreateTask(sub_8081224, 10);
             else
                 sBerryBlenderData->field_120[0] = CreateTask(sUnknown_083399EC[0], 10);
@@ -2037,7 +2039,7 @@ static void sub_8081744(void)
             sBerryBlenderData->field_4C--;
         sBerryBlenderData->field_72 = 0;
     }
-    if (gUnknown_020322D5 && gMain.newKeys & L_BUTTON)
+    if (gEnableContestDebugging && gMain.newKeys & L_BUTTON)
         sBerryBlenderData->field_123 ^= 1;
 }
 
@@ -2700,7 +2702,7 @@ static void CB2_HandlePlayerLinkPlayAgainChoice(void)
     case 9:
         if (IsLinkTaskFinished())
         {
-            BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, 0);
+            BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, RGB_BLACK);
             sBerryBlenderData->gameEndState++;
         }
         break;
@@ -3337,7 +3339,7 @@ static bool8 Blender_PrintBlendingResults(void)
         TryAddContestLinkTvShow(&pokeblock, &sBerryBlenderData->tvBlender);
 
         CreateTask(sub_8083F3C, 6);
-        sub_80EECEC();
+        IncrementDailyBerryBlender();
 
         RemoveBagItem(gSpecialVar_ItemId, 1);
         AddPokeblock(&pokeblock);

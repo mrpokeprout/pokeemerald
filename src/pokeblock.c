@@ -1,9 +1,8 @@
 #include "global.h"
-#include "alloc.h"
+#include "malloc.h"
 #include "battle.h"
 #include "battle_controllers.h"
 #include "battle_message.h"
-#include "berry.h"
 #include "bg.h"
 #include "decompress.h"
 #include "event_data.h"
@@ -30,8 +29,10 @@
 #include "task.h"
 #include "text.h"
 #include "text_window.h"
+#include "constants/berry.h"
 #include "constants/items.h"
 #include "constants/songs.h"
+#include "constants/rgb.h"
 
 #define POKEBLOCK_MAX_FEEL 99
 #define FIELD_E75_COUNT 7
@@ -218,10 +219,10 @@ static const u8 sContestStatsMonData[] = {MON_DATA_COOL, MON_DATA_BEAUTY, MON_DA
 static const struct OamData sOamData_PokeblockCase =
 {
     .y = 0,
-    .affineMode = 0,
-    .objMode = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
     .mosaic = 0,
-    .bpp = 0,
+    .bpp = ST_OAM_4BPP,
     .shape = SPRITE_SHAPE(64x64),
     .x = 0,
     .matrixNum = 0,
@@ -450,7 +451,7 @@ void OpenPokeblockCase(u8 caseId, void (*callback)(void))
         sPokeblockMenu->pokeblockOptionsIds = sActionsWhenGivingToLady;
         sPokeblockMenu->optionsNo = ARRAY_COUNT(sActionsWhenGivingToLady);
         break;
-    default:
+    default: // PBLOCK_CASE_FIELD
         sPokeblockMenu->pokeblockOptionsIds = sActionsOnField;
         sPokeblockMenu->optionsNo = ARRAY_COUNT(sActionsOnField);
         break;
@@ -461,7 +462,7 @@ void OpenPokeblockCase(u8 caseId, void (*callback)(void))
 
 void OpenPokeblockCaseInBattle(void)
 {
-    OpenPokeblockCase(PBLOCK_CASE_BATTLE, SetCB2ToReshowScreenAfterMenu2);
+    OpenPokeblockCase(PBLOCK_CASE_BATTLE, CB2_SetUpReshowBattleScreenAfterMenu2);
 }
 
 void OpenPokeblockCaseOnFeeder(void)
@@ -585,7 +586,7 @@ static bool8 InitPokeblockMenu(void)
         gMain.state++;
         break;
     case 18:
-        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, 0);
+        BeginNormalPaletteFade(0xFFFFFFFF, 0, 0x10, 0, RGB_BLACK);
         gPaletteFade.bufferTransferDisabled = 0;
         gMain.state++;
         break;
@@ -927,7 +928,7 @@ static void sub_8136470(struct Sprite *sprite)
     switch (sprite->data[0])
     {
     case 0:
-        sprite->oam.affineMode = 1;
+        sprite->oam.affineMode = ST_OAM_AFFINE_NORMAL;
         sprite->affineAnims = sSpriteAffineAnimTable_85B26F0;
         InitSpriteAffineAnim(sprite);
         sprite->data[0] = 1;
@@ -936,7 +937,7 @@ static void sub_8136470(struct Sprite *sprite)
     case 1:
         if (++sprite->data[1] > 11)
         {
-            sprite->oam.affineMode = 0;
+            sprite->oam.affineMode = ST_OAM_AFFINE_OFF;
             sprite->data[0] = 0;
             sprite->data[1] = 0;
             FreeOamMatrix(sprite->oam.matrixNum);
@@ -948,7 +949,7 @@ static void sub_8136470(struct Sprite *sprite)
 
 static void FadePaletteAndSetTaskToClosePokeblockCase(u8 taskId)
 {
-    BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, 0);
+    BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 0x10, RGB_BLACK);
     gTasks[taskId].func = Task_FreeDataAndExitPokeblockCase;
 }
 
@@ -959,7 +960,7 @@ static void Task_FreeDataAndExitPokeblockCase(u8 taskId)
     if (!gPaletteFade.active)
     {
         if (sPokeblockMenu->caseId == PBLOCK_CASE_FEEDER || sPokeblockMenu->caseId == PBLOCK_CASE_GIVE)
-            gFieldCallback = FieldCallback_ReturnToEventScript2;
+            gFieldCallback = FieldCB_ContinueScriptHandleMusic;
 
         DestroyListMenuTask(data[0], &sSavedPokeblockData.lastItemPage, &sSavedPokeblockData.lastItemPos);
         sub_8136418();

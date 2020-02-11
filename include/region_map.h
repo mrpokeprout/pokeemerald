@@ -90,7 +90,7 @@ struct RegionMapLocation
 // Exported RAM declarations
 
 // Exported ROM declarations
-void sub_8122CF8(struct RegionMap *regionMap, struct BgTemplate *template, bool8 zoomed);
+void sub_8122CF8(struct RegionMap *regionMap, const struct BgTemplate *template, bool8 zoomed);
 bool8 sub_8122DB0(void);
 void UpdateRegionMapVideoRegs(void);
 void InitRegionMap(struct RegionMap *regionMap, u8 argument);
@@ -102,12 +102,16 @@ void CreateRegionMapPlayerIcon(u16 x, u16 y);
 void CreateRegionMapCursor(u16 tileTag, u16 paletteTag);
 u8 *GetMapName(u8 *, u16, u16);
 bool32 sub_8124668(u8 mapSecId);
-u8 *sub_81245DC(u8 *dest, u16 mapSecId);
+u8 *GetMapNameGeneric(u8 *dest, u16 mapSecId);
 u8 *sub_8124610(u8 *dest, u16 mapSecId);
 u16 CorrectSpecialMapSecId(u16 mapSecId);
 void sub_8122D88(struct RegionMap *regionMap);
 void PokedexAreaScreen_UpdateRegionMapVariablesAndVideoRegs(s16 x, s16 y);
 void MCB2_FlyMap(void);
+bool8 sub_8124658(void);
+void sub_812454C(void);
+void sub_8123030(u16 a0, u32 a1);
+void sub_8123418(void);
 
 extern const struct RegionMapLocation gRegionMapEntries[];
 
